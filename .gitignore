@@ -4,6 +4,7 @@ src/core-main*
 src/main.dSYM/*
 resources/*
 Src/main
+build/
 
 # Compiled source #
 ###################

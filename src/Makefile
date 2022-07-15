@@ -14,16 +14,28 @@ else
 	CPP := $(CPP) -I/usr/local/boost_1_79_0/
 endif
 
-all: core-main main test library
+all: core-main main test library exec
 
-build: clean library
+build: clean library exec
 
-test: CoreTests.o SimSuite.o Network.o Node.o
-	$(CPP) $(CPPFLAGS) CoreTests.o SimSuite.o Network.o Node.o -o test
+
+
+test: tests/CoreTests.cpp SimSuite.o Network.o Node.o
+	$(CPP) $(CPPFLAGS) tests/CoreTests.cpp SimSuite.o Network.o Node.o -o test
 
 library: SimSuite.o Network.o Node.o
 	$(CPP) $(CPPFLAGS) -c SimSuite.cpp -o lib_simsuite.o
 	ar rcs lib_simsuite.a lib_simsuite.o Network.o Node.o
+
+main: SimSuite.o Network.o Node.o main.cpp
+	$(CPP) $(CPPFLAGS) SimSuite.o Network.o Node.o main.cpp -o main
+
+core-main: core/core-main.cpp Network.o Node.o
+	$(CPP) $(CPPFLAGS) core/core-main.cpp Network.o Node.o -o core-main
+
+exec: lib_simsuite.a exec.cpp
+	$(CPP) $(CPPFLAGS) -L. -l_simsuite -lboost_program_options -L"C:/Program Files (x86)/boost/stage/lib/" exec.cpp
+
 
 
 Node.o: core/Node.cpp core/Node.hpp
@@ -38,11 +50,9 @@ SimSuite.o: SimSuite.cpp SimSuite.hpp
 CoreTests.o: tests/CoreTests.cpp
 	$(CPP) $(CPPFLAGS) -c tests/CoreTests.cpp
 
-core-main: core/core-main.cpp Network.o Node.o
-	$(CPP) $(CPPFLAGS) core/core-main.cpp Network.o Node.o -o core-main
 
-main: SimSuite.o Network.o Node.o main.cpp
-	$(CPP) $(CPPFLAGS) SimSuite.o Network.o Node.o main.cpp -o main
+
+
 
 clean:
 	$(RM) *.o 2> $(NULL_DEVICE)
