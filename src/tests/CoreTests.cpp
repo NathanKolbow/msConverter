@@ -19,8 +19,11 @@
 
 
 #define BOOST_TEST_MAIN
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/test/debug.hpp>
 
+
+#define SIMSUITE_NETWORK_SUPRESS_WARNINGS
 #include "../core/Network.hpp"
 #include "../SimSuite.hpp"
 
@@ -29,6 +32,15 @@
 #include <chrono>
 #include <ctime>
 
+struct GlobalFixture {
+    GlobalFixture() {
+        boost::debug::detect_memory_leaks(false);
+        disableNetworkWarnings();
+    }
+    ~GlobalFixture() { }
+};
+BOOST_GLOBAL_FIXTURE(GlobalFixture);
+
 std::vector<std::string> ALL_NEWICKS{
     std::string("((1,((2,(3,(4)Y#H1)g)e,(((Y#H1,5)h,6)f)X#H2)c)a,((X#H2,7)d,8)b)r;"),
     std::string("(((((1,#H1),((2)#H1,3)),(4)#H2),(#H2,5)),6);"),
@@ -36,7 +48,6 @@ std::vector<std::string> ALL_NEWICKS{
     std::string("(15,(1,((14,(#H1,(((12,13),(11,#H3)),(7,((10)#H3,(8,9)))))),((((2,3))#H2,(6,(5,(#H2,4)))))#H1)));"),
     std::string("(10,(#H2,(1,(2,(((9)#H1,(3,(4,((5,6),(7,(8,#H1)))))))#H2))));"),
     std::string("((((1,2),((3,4))#H1),(#H1,5)),6);"),
-    // "((1:0.1,((2:0.2,(3:0.3,(4:0.4)Y#H1:3.0)g:0.6)e:0.7,(((Y#H1:0.8,5:0.9)h:1.0,6:1.1)f:1.2)X#H2:0.4)c:1.4)a:1.5,((X#H2:0.4,7:1.7)d:1.8,8:1.9)b:2.0)r;",
     std::string("(15:11.0,(1:10.0,((14:8.0,(((7:2.8,(10:1.6,(9:0.4,8:0.4):1.2):1.2):0.8,(11:2.8,(13:0.4,12:0.4):2.4):0.8):3.4,#H1:0.4::0.3):1.0):1.2,(((2:0.4,3:0.4):5.2,((4:3.6,5:3.6):1.2,6:4.8):0.8):1.0)#H1:2.6::0.7):0.8):1.0);")
 };
 
@@ -55,7 +66,7 @@ BOOST_AUTO_TEST_CASE( test1 ) {
     }
 }
 
-//void TEST_isomorphicNewick_FALSE(void) {
+// isomorphicNewick tests where the networks are obvioiusly not isomorphic
 BOOST_AUTO_TEST_CASE( test2 ) {
     // Obvious falses, comparing totally different networks
     int nRand = 1;

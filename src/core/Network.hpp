@@ -59,5 +59,6 @@ bool isomorphic(Network*, Network*);
 bool isomorphicNewick(std::string, std::string);
 bool isomorphicRecur(Node*, Node*);
 bool nodeEquivBranches(Node *p1, Node *p2);
+void disableNetworkWarnings(void);
 
 #endif

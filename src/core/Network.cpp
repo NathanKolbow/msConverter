@@ -31,6 +31,10 @@
 #include <typeinfo>
 
 
+bool WARNINGS_ENABLED = true;
+
+void disableNetworkWarnings(void) { WARNINGS_ENABLED = false; }
+
 void permuteRandomBranchLength(double change) {
 
 }
@@ -569,7 +573,9 @@ std::string Network::getMSString(void) {
     }
 
     if(!ultrametric) {
-        std::cerr << "WARNING: ms requires ultramteric input, and the input was not ultrametric, so branch lengths are automatically being extended to make the input ultrametric." << std::endl;
+        if(WARNINGS_ENABLED) {
+            std::cerr << "WARNING: ms requires ultramteric input, and the input was not ultrametric, so branch lengths are automatically being extended to make the input ultrametric." << std::endl;
+        }
 
         // we are going to edit the leaf times to make the tree ultrametric, and we have
         // to store their original lengths in order to revert back
@@ -763,14 +769,20 @@ void Network::buildFromNewick(std::string newickStr) {
 
 void Network::warnBranchLength(bool readingBranchLength, bool &alreadyWarned) {
     if(readingBranchLength && !alreadyWarned) {
-        std::cerr << "WARNING: At least one branch length was left unspecified and is defaulting to length 0." << std::endl;
+        if(WARNINGS_ENABLED) {
+            std::cerr << "WARNING: At least one branch length was left unspecified and is defaulting to length 0." << std::endl;
+        }
+
         alreadyWarned = true;
     }
 }
 
 void Network::warnHybridGamma(bool justReadHybrid, bool &warnedBlankOrZeroGamma, std::string nodeName) {
     if(justReadHybrid && !warnedBlankOrZeroGamma) {
-        std::cerr << "WARNING: Gamma not specified for hybrid node " << nodeName << ". Topology will be preserved but ALL gamma values will default to 0." << std::endl;
+        if(WARNINGS_ENABLED) {
+            std::cerr << "WARNING: Gamma not specified for hybrid node " << nodeName << ". Topology will be preserved but ALL gamma values will default to 0." << std::endl;
+        }
+
         warnedBlankOrZeroGamma = true;
     }
 }
@@ -1074,7 +1086,10 @@ std::vector<MSEvent*> Network::toms(double endTime) {
     // If overwriteNames is now true, overwrite the names
     int popnCounter = 1;
     if(overwriteNames) {
-        std::cerr << "WARNING: Taxon names do not appear to be natural numbers ascending from 1 (i.e. 1, 2, 3, 4, ...), so taxon names will be overwritten." << std::endl;
+        if(WARNINGS_ENABLED) {
+            std::cerr << "WARNING: Taxon names do not appear to be natural numbers ascending from 1 (i.e. 1, 2, 3, 4, ...), so taxon names will be overwritten." << std::endl;
+        }
+
         // Set the IDs
         for(unsigned int i = 0; i < activeNodes.size(); i++) {
             activeNodes[i]->setHiddenID(popnCounter++);

@@ -5,6 +5,7 @@ src/main.dSYM/*
 resources/*
 Src/main
 build/
+testBin/
 
 # Compiled source #
 ###################
