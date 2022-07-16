@@ -6,7 +6,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_DEBUG ON)
 set(Boost_USE_STATIC_LIBS ON)
 # set(BOOST_LIBRARYDIR "C:/Program Files (x86)/boost/stage/lib/")
-find_package(Boost 1.79.0 COMPONENTS program_options unit_test_framework REQUIRED)
+find_package(Boost 1.60.0 COMPONENTS program_options unit_test_framework REQUIRED)
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
