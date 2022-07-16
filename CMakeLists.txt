@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(msconverter)
+enable_testing()
 
 add_subdirectory(src)
 
-enable_testing()
 
 # file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 
