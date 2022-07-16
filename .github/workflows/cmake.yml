@@ -30,7 +30,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y libboost-all-dev
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target ALL_BUILD
+        cmake --build ${{github.workspace}}/build -DBoost_INCLUDE_DIR=$BOOST_ROOT_1_79_0/include -DBoost_LIBRARY_DIRS=$BOOST_ROOT_1_79_0/lib --config ${{env.BUILD_TYPE}} --target ALL_BUILD
 
     - name: Test
       working-directory: ${{github.workspace}}/build
