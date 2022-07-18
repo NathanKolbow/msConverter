@@ -13,11 +13,14 @@ set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.60.0 COMPONENTS program_options unit_test_framework REQUIRED)
 # find_package(Boost 1.79.0)
 
+# Build the SimSuite library
+add_library(simsuite OBJECT SimSuite.cpp)
+target_include_directories(simsuite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(simsuite core)
+
+# Set up boost and add the ms-converter executable
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
-    add_executable(myexec exec.cpp)
-    target_link_libraries(myexec ${Boost_LIBRARIES})
+    add_executable(ms-converter exec.cpp)
+    target_link_libraries(ms-converter ${Boost_LIBRARIES} core simsuite)
 endif()
-
-set(tool_dest "bin")
-install(TARGETS myexec DESTINATION "bin")

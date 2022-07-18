@@ -9,6 +9,7 @@ namespace SimSuite {
     std::string msToNewick(std::string msStr);
     std::vector<std::string> newickFileToMS(std::string location);
     std::string msFromUserInputNewick(void);
+    void disableWarnings(void);
 }
 
 #endif

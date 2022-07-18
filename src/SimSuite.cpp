@@ -61,4 +61,8 @@ namespace SimSuite {
         Network net(newick, "newick");
         return net.getMSString();
     }
+
+    void disableWarnings(void) {
+        disableNetworkWarnings();
+    }
 }
