@@ -23,11 +23,7 @@
 #include <boost/test/debug.hpp>
 
 BOOST_AUTO_TEST_CASE( test1 ) {
-    BOOST_CHECK_EQUAL(1, 3);
-    BOOST_CHECK_EQUAL(2, 2);
-    BOOST_CHECK_EQUAL(1, 3);
-    BOOST_CHECK_EQUAL(1, 3);
-    BOOST_CHECK_EQUAL(1, 3);
+    
 }
 
 
