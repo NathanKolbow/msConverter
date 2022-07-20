@@ -550,6 +550,23 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
     return events;
 }
 
+void Network::makeUltrametric(void) {
+    std::vector<Node*> leaves;
+    double endTime = 0;
+    for(Node *p : nodes) {
+        if(p->getLft() == p->getRht()) {
+            leaves.push_back(p);
+            endTime = std::max(endTime, p->getTime());
+        }
+    }
+    for(Node *p : leaves) {
+        p->setMajorBranchLength(p->getMajorBranchLength() + (endTime - p->getTime()));
+        if(p->getMinorAnc() != NULL)
+            p->setMinorBranchLength(p->getMinorBranchLength() + (endTime - p->getTime()));
+        p->setTime(endTime);
+    }
+}
+
 std::string Network::getMSString(void) {
     // Check to make sure the tree is ultrametric
     double endTime = -1;
@@ -558,6 +575,8 @@ std::string Network::getMSString(void) {
     // used if the tree is not ultrametric
     std::vector<Node*> leaves;
     std::vector<int> times;
+
+    // check to see if it is ultrametric
     for(Node *p : nodes) {
         if(p->getLft() == p->getRht()) {
             leaves.push_back(p);
@@ -581,6 +600,11 @@ std::string Network::getMSString(void) {
         // to store their original lengths in order to revert back
         for(Node *p : leaves) {
             times.push_back(p->getTime());
+
+            // I don't think branch lengths are actually used anywhere in the code to convert to ms, but better safe than sorry
+            p->setMajorBranchLength(p->getMajorBranchLength() + (endTime - p->getTime()));
+            if(p->getMinorAnc() != NULL)
+                p->setMinorBranchLength(p->getMinorBranchLength() + (endTime - p->getTime()));
             p->setTime(endTime);
         }
     }

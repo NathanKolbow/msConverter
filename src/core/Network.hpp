@@ -36,6 +36,7 @@ class Network {
         int getLength(std::string);
         int getTotalExtantTaxa(void);
         std::string getNewick(bool);
+        void makeUltrametric(void);
 
     private:
         void buildFromNewick(std::string newickStr);

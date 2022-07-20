@@ -1,7 +1,5 @@
 project(tests)
 
-add_library(${PROJECT_NAME} OBJECT CoreTests.cpp)
-
 # Configure and find Boost
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_DEBUG ON)
@@ -11,7 +9,14 @@ find_package(Boost 1.60.0 COMPONENTS program_options unit_test_framework REQUIRE
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
-    add_executable(test_runner ${CMAKE_CURRENT_SOURCE_DIR}/CoreTests.cpp)
-    target_link_libraries(test_runner ${Boost_LIBRARIES} core)
-    add_test(NAME test_runner COMMAND test_runner)
+
+    # test_isomorphicNewick
+    add_executable(test_isomorphicNewick ${CMAKE_CURRENT_SOURCE_DIR}/test_isomorphicNewick.cpp)
+    target_link_libraries(test_isomorphicNewick ${Boost_LIBRARIES} core)
+    add_test(NAME test_isomorphicNewick COMMAND test_isomorphicNewick)
+
+    # test_makeUltrametric
+    add_executable(test_makeUltrametric ${CMAKE_CURRENT_SOURCE_DIR}/test_makeUltrametric.cpp)
+    target_link_libraries(test_makeUltrametric ${Boost_LIBRARIES} core)
+    add_test(NAME test_makeUltrametric COMMAND test_makeUltrametric)
 endif()
