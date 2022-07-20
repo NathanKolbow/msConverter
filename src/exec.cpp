@@ -9,6 +9,8 @@
 
 namespace po = boost::program_options;
 
+inline void argsOnly(std::string&);
+
 int main(int argc, char *argv[]) {
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -17,6 +19,7 @@ int main(int argc, char *argv[]) {
         ("newick", po::value<std::string>(), "Newick formatted network or tree")
         ("output,o,out", po::value<std::string>(), "output file location")
         ("quiet,no_warn", "do not output warning messages to standard error output")
+        ("args_only", "only output the -ej and -es arguments for the ms command, NOT a fully formed ms command")
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -41,14 +44,12 @@ int main(int argc, char *argv[]) {
     }
 
     // Read and convert the Newick
-    std::vector<std::string> msArgs;
+    std::vector<std::string> msCmds;
     if(vm.count("file")) {
-        msArgs = SimSuite::newickFileToMS(vm["file"].as<std::string>());
-        // std::cout << "File my guy" << std::endl;
+        msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>());
     }
     if(vm.count("newick")) {
-        msArgs.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>()));
-        // std::cout << "Newick my dude" << std::endl;
+        msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>()));
     }
 
     // Write the ms arguments
@@ -59,7 +60,11 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        for(std::string line : msArgs) {
+        for(std::string line : msCmds) {
+            if(vm.count("args_only")) {
+                argsOnly(line);
+            }
+
             output_file << line << std::endl;
             if(output_file.fail()) {
                 std::cerr << "An error occurred while writing to " << vm["output"].as<std::string>() << "." << std::endl;
@@ -68,9 +73,30 @@ int main(int argc, char *argv[]) {
         }
         return 0;
     } else {
-        for(std::string str : msArgs) {
+        for(std::string str : msCmds) {
+            if(vm.count("args_only")) {
+                argsOnly(str);
+            }
+
             std::cout << str << std::endl;
         }
         return 0;
     }
+}
+
+inline void argsOnly(std::string &msCmd) {
+    int _dash = 0;
+    int dashCount = 0;
+    while(dashCount < 3 && msCmd[_dash] != '\0') {
+        if(msCmd[_dash] == '-')
+            dashCount++;
+        _dash += 1;
+    }
+
+    if(msCmd[_dash] == '\0') {
+        std::cerr << "FATAL ERROR: Looks like some string memory got mixed up somewhere along the line..." << std::endl;
+        exit(-1);
+    }
+
+    msCmd.erase(0, _dash-1);
 }

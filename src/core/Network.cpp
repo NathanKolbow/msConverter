@@ -586,7 +586,12 @@ std::string Network::getMSString(void) {
     }
 
     std::vector<MSEvent*> events = toms(endTime);
-    std::string str = std::string("");
+    std::stringstream ss;
+    ss << "ms " << leaves.size() << " " << 1 << " -T -I " << leaves.size();
+    for(unsigned int i=0; i < leaves.size(); i++)
+        ss << " 1";
+
+    std::string str = ss.str() + " ";
 
     for(MSEvent* e : events) {
         str += ((e->getEventType() == join) ? ((MSJoinEvent*)e)->toString() : ((MSSplitEvent*)e)->toString()) + " ";
