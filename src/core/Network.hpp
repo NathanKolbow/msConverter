@@ -27,7 +27,7 @@ class Network {
 
     protected:
         Network(void) { }
-        Node* root;
+        Node* root = NULL;
         std::vector<Node*> nodes;
         void writeNetwork(Node *p, std::stringstream& ss, bool, bool);
         void writeNetwork(Node *p, std::stringstream *ss, std::vector<std::stringstream*>& allStreams, bool minorHybrid);
@@ -46,7 +46,6 @@ class Network {
         void patchNetwork(void);
         void setTimes(void);
         void setTimeRecur(Node *p);
-        double totalTime;
         void postmsPatchAndRename(void);
         std::string getInternalName(int);
         std::string getLeafName(int);

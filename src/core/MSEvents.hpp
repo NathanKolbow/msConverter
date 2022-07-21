@@ -14,7 +14,7 @@ class MSEvent {
         void setTime(double t) { time = t; }
         
     protected:
-        double time;
+        double time = -1;
 };
 
 class MSJoinEvent:public MSEvent {
