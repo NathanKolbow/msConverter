@@ -24,6 +24,7 @@
 
 #include "../core/Network.hpp"
 #include "../core/Node.hpp"
+#include "test_helpers.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -47,18 +48,7 @@ BOOST_AUTO_TEST_CASE(test1, *boost::unit_test::tolerance(1e-9)) {
     // 3. check that all the `leaf->getTime()`'s match
     // 4. more rigorously, traverse the network from leaves to root via branches and 
     //    check EVERY SINGLE NODE for consistent times
-    std::vector<Network*> newicks;
-    std::ifstream is("../../../src/newick-strings.txt");
-
-    BOOST_TEST(!is.fail());
-
-    for(std::string str; std::getline(is, str);) {
-        Network *net = new Network(str, "newick");
-        net->makeUltrametric();
-        newicks.push_back(net);
-    }
-
-    BOOST_TEST(newicks.size() != 0);
+    std::vector<Network*> newicks = loadNewickNetworks();
 
     for(Network *net : newicks) {
         // check all leaf times
