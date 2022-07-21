@@ -17,7 +17,6 @@ on:
 env:
   # Path to the CMake build directory.
   build: '${{ github.workspace }}/build'
-  boost_version: '1.79.0'
 
 permissions:
   contents: read
@@ -36,8 +35,10 @@ jobs:
 
       - name: Download and install Boost
         uses: MarkusJx/install-boost@v2.3.0
-        env:
+        with:
           boost_version: 1.79.0
+          platform_version: 2022
+          toolset: msvc
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}\
