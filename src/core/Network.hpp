@@ -23,6 +23,7 @@ class Network {
 
         std::vector<Node*> getNodes(void) { return nodes; }
         bool permuteRandomGamma(double gamma);
+        void makeUltrametric(void);
 
     protected:
         Network(void) { }
@@ -36,7 +37,6 @@ class Network {
         int getLength(std::string);
         int getTotalExtantTaxa(void);
         std::string getNewick(bool);
-        void makeUltrametric(void);
 
     private:
         void buildFromNewick(std::string newickStr);

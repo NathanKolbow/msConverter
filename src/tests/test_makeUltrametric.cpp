@@ -18,12 +18,112 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-#define BOOST_TEST_MAIN
+#define BOOST_TEST_MODULE test_makeUltrametric
 #include <boost/test/unit_test.hpp>
 #include <boost/test/debug.hpp>
 
-BOOST_AUTO_TEST_CASE( test1 ) {
-    
+#include "../core/Network.hpp"
+#include "../core/Node.hpp"
+
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include <map>
+#include <filesystem>
+
+struct GlobalFixture {
+    GlobalFixture() {
+        boost::debug::detect_memory_leaks(false);
+        disableNetworkWarnings();
+    }
+    ~GlobalFixture() { }
+};
+BOOST_GLOBAL_FIXTURE(GlobalFixture);
+
+BOOST_AUTO_TEST_CASE(test1, *boost::unit_test::tolerance(1e-9)) {
+    // for each network in newick-strings.txt:
+    // 1. load the network
+    // 2. run ::makeUltrametric
+    // 3. check that all the `leaf->getTime()`'s match
+    // 4. more rigorously, traverse the network from leaves to root via branches and 
+    //    check EVERY SINGLE NODE for consistent times
+    std::vector<Network*> newicks;
+    std::ifstream is("../../../src/newick-strings.txt");
+
+    BOOST_TEST(!is.fail());
+
+    for(std::string str; std::getline(is, str);) {
+        Network *net = new Network(str, "newick");
+        net->makeUltrametric();
+        newicks.push_back(net);
+    }
+
+    BOOST_TEST(newicks.size() != 0);
+
+    for(Network *net : newicks) {
+        // check all leaf times
+        std::vector<Node*> leaves;
+        double endTime = -1;
+        for(Node *p : net->getNodes()) {
+            if(p->getLft() == p->getRht()) {
+                leaves.push_back(p);
+                if(endTime != -1)
+                    BOOST_CHECK_EQUAL(endTime, p->getTime());
+                endTime = std::max(p->getTime(), endTime);
+            }
+        }
+
+        // rigorous leaves --> root checks
+        std::vector<double> rootTimes;
+        std::stack<Node*> stack;
+        std::map<Node*, double> timeMap;
+        
+        // prime the pump
+        for(Node *p : leaves) {
+            stack.push(p);
+        }
+
+        // this is just testing, so we're totally fine to overwrite the `time` variable 
+        // in nodes here we'll do this to make things easier
+        while(!stack.empty()) {
+            Node *p = stack.top();
+            stack.pop();
+
+            // if we are root, make sure that our mapped value is 0
+            if(p->getMajorAnc() == NULL) {
+                BOOST_CHECK_EQUAL(p->getTime(), 0);
+                if(timeMap.find(p) != timeMap.end())
+                    BOOST_CHECK(timeMap[p] == 0);
+                continue;
+            }
+
+            Node *majAnc = p->getMajorAnc();
+            Node *minAnc = p->getMinorAnc();
+
+            // check whether major anc times line up
+            double newMajTime = p->getTime() - p->getMajorBranchLength();
+            if(timeMap.find(majAnc) != timeMap.end()) {
+                // if the mapping already exists
+                BOOST_TEST(timeMap[majAnc] == newMajTime);
+            } else {
+                timeMap.insert(std::pair<Node*, double>(majAnc, newMajTime));
+                // only push if we haven't seen the node yet
+                stack.push(majAnc);
+            }
+
+            // check whether minor anc times line up
+            if(minAnc != NULL) {
+                double newMinTime = p->getTime() - p->getMinorBranchLength();
+                if(timeMap.find(minAnc) != timeMap.end()) {
+                    BOOST_TEST(timeMap[minAnc] == newMinTime);
+                } else {
+                    timeMap.insert(std::pair<Node*, double>(minAnc, newMinTime));
+                    // only push if we haven't seen the node yet
+                    stack.push(minAnc);
+                }
+            }
+        }
+    }
 }
 
 

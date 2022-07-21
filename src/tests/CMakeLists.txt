@@ -14,9 +14,11 @@ if(Boost_FOUND)
     add_executable(test_isomorphicNewick ${CMAKE_CURRENT_SOURCE_DIR}/test_isomorphicNewick.cpp)
     target_link_libraries(test_isomorphicNewick ${Boost_LIBRARIES} core)
     add_test(NAME test_isomorphicNewick COMMAND test_isomorphicNewick)
+    set_property(TARGET test_isomorphicNewick PROPERTY CXX_STANDARD 17)
 
     # test_makeUltrametric
     add_executable(test_makeUltrametric ${CMAKE_CURRENT_SOURCE_DIR}/test_makeUltrametric.cpp)
     target_link_libraries(test_makeUltrametric ${Boost_LIBRARIES} core)
     add_test(NAME test_makeUltrametric COMMAND test_makeUltrametric)
+    set_property(TARGET test_makeUltrametric PROPERTY CXX_STANDARD 17)
 endif()
