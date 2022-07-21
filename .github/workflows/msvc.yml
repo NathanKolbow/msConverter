@@ -17,6 +17,7 @@ on:
 env:
   # Path to the CMake build directory.
   build: '${{ github.workspace }}/build'
+  BUILD_TYPE: Release
 
 permissions:
   contents: read
@@ -48,7 +49,11 @@ jobs:
           BOOST_ROOT: ${{steps.install-boost.outputs.BOOST_ROOT}}
 
       - name: Build CMake
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}\
+             -DBoost_INCLUDE_DIRS=${{steps.install-boost.outputs.BOOST_ROOT}}/include\
+             -DBoost_LIBRARY_DIRS=${{steps.install-boost.outputs.BOOST_ROOT}}/lib
+        env:
+          BOOST_ROOT: ${{steps.install-boost.outputs.BOOST_ROOT}}
 
       - name: Initialize MSVC Code Analysis
         uses: microsoft/msvc-code-analysis-action@04825f6d9e00f87422d6bf04e1a38b1f3ed60d99
