@@ -17,6 +17,7 @@ on:
 env:
   # Path to the CMake build directory.
   build: '${{ github.workspace }}/build'
+  boost_version: '1.79.0'
 
 permissions:
   contents: read
