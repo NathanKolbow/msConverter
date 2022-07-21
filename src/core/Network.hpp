@@ -56,7 +56,7 @@ class Network {
         void warnHybridGamma(bool justReadHybrid, bool &warnedBlankOrZeroGamma, std::string nodeName);
 };
 
-bool isomorphic(Network*, Network*);
+bool isomorphic(Network, Network);
 bool isomorphicNewick(std::string, std::string);
 bool isomorphicRecur(Node*, Node*);
 bool nodeEquivBranches(Node *p1, Node *p2);

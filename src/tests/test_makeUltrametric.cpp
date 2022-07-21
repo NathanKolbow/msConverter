@@ -33,7 +33,7 @@
 
 struct GlobalFixture {
     GlobalFixture() {
-        boost::debug::detect_memory_leaks(false);
+        boost::debug::detect_memory_leaks(true);
         disableNetworkWarnings();
     }
     ~GlobalFixture() { }
@@ -124,6 +124,9 @@ BOOST_AUTO_TEST_CASE(test1, *boost::unit_test::tolerance(1e-9)) {
             }
         }
     }
+
+    for(Network *net : newicks)
+        delete net;
 }
 
 

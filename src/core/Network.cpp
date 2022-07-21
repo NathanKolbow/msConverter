@@ -60,13 +60,13 @@ bool Network::permuteRandomGamma(double change) {
     return false;
 }
 
-bool isomorphic(Network *net1, Network *net2) {
+bool isomorphic(Network net1, Network net2) {
     // Find the root of each network
-    Node *root1 = net1->getNodes()[0];
+    Node *root1 = net1.getNodes()[0];
     while(root1->getMajorAnc() != NULL)
         root1 = root1->getMajorAnc();
     
-    Node *root2 = net2->getNodes()[0];
+    Node *root2 = net2.getNodes()[0];
     while(root2->getMajorAnc() != NULL)
         root2 = root2->getMajorAnc();
 
@@ -139,7 +139,7 @@ bool nodeEquivBranches(Node *p1, Node *p2) {
 }
 
 bool isomorphicNewick(std::string newick1, std::string newick2) {
-    return isomorphic(new Network(newick1, "newick"), new Network(newick2, "newick"));
+    return isomorphic(Network(newick1, "newick"), Network(newick2, "newick"));
 }
 
 void Network::buildFromMS(std::vector<MSEvent*> events) {

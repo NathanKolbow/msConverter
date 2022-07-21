@@ -34,7 +34,7 @@
 
 struct GlobalFixture {
     GlobalFixture() {
-        boost::debug::detect_memory_leaks(false);
+        boost::debug::detect_memory_leaks(true);
         disableNetworkWarnings();
     }
     ~GlobalFixture() { }
@@ -52,7 +52,7 @@ std::vector<std::string> ALL_NEWICKS{
 };
 
 // isomorphicNewick tests where the networks are truly isomorphic
-BOOST_AUTO_TEST_CASE( test1 ) {
+BOOST_AUTO_TEST_CASE(test1) {
     int nRand = 10;
     for(std::string newick : ALL_NEWICKS) {
         Network net(newick, "newick");
@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE( test1 ) {
 }
 
 // isomorphicNewick tests where the networks are obvioiusly not isomorphic
-BOOST_AUTO_TEST_CASE( test2 ) {
+BOOST_AUTO_TEST_CASE(test2) {
     // Obvious falses, comparing totally different networks
-    int nRand = 1;
+    int nRand = 10;
     for(unsigned int n=0; n < ALL_NEWICKS.size()-1; n++) {
         std::vector<std::string> randoms1 = Network(ALL_NEWICKS[n], "newick").getRandomNewickRepresentations(nRand);
         std::vector<std::string> randoms2 = Network(ALL_NEWICKS[n+1], "newick").getRandomNewickRepresentations(nRand);
