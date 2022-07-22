@@ -8,9 +8,17 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <filesystem>
+#include <sstream>
+
+namespace fs = std::filesystem;
+
+inline std::string getNewickFilePath(void) {
+    return std::string("C:\\Users\\Nathan\\OneDrive\\School\\Research\\Newick-to-ms\\newick-strings.txt");
+}
 
 inline std::vector<Network*> loadNewickNetworks(void) {
-    std::ifstream is("../../../src/newick-strings.txt");
+    std::ifstream is(getNewickFilePath());
     BOOST_TEST(!is.fail());
     if(is.fail()) {
         std::cerr << "Failed to load newick-strings.txt." << std::endl;
@@ -28,7 +36,7 @@ inline std::vector<Network*> loadNewickNetworks(void) {
 }
 
 inline std::vector<std::string> loadNewickStrings(void) {
-    std::ifstream is("../../../src/newick-strings.txt");
+    std::ifstream is(getNewickFilePath());
     BOOST_TEST(!is.fail());
     if(is.fail()) {
         std::cerr << "Failed to load newick-strings.txt." << std::endl;
@@ -41,6 +49,23 @@ inline std::vector<std::string> loadNewickStrings(void) {
     }
     BOOST_TEST(newicks.size() != 0);
     return newicks;
+}
+
+inline void argsOnly(std::string &msCmd) {
+    int _dash = 0;
+    int dashCount = 0;
+    while(dashCount < 3 && msCmd[_dash] != '\0') {
+        if(msCmd[_dash] == '-')
+            dashCount++;
+        _dash += 1;
+    }
+
+    if(msCmd[_dash] == '\0') {
+        std::cerr << "FATAL ERROR: Looks like some string memory got mixed up somewhere along the line..." << std::endl;
+        exit(-1);
+    }
+
+    msCmd.erase(0, _dash-1);
 }
 
 #endif

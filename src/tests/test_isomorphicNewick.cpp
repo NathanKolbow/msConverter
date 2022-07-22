@@ -45,8 +45,7 @@ BOOST_GLOBAL_FIXTURE(GlobalFixture);
 // isomorphicNewick tests where the networks are truly isomorphic
 BOOST_AUTO_TEST_CASE(test1) {
     int nRand = 10;
-    std::vector<Network*> nets = loadNewickNetworks();
-    for(Network *net : nets) {
+    for(Network *net : loadNewickNetworks()) {
         std::vector<std::string> randomNewicks = net->getRandomNewickRepresentations(nRand);
 
         for(int i=0; i < nRand-1; i++) {

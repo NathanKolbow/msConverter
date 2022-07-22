@@ -66,9 +66,9 @@ void Node::printInfo(void) {
     }
         
     if(getMajorAnc() != NULL)
-        std::cout << "\tMajor anc: " << majorAncestor->name << std::endl;
+        std::cout << "\tMajor anc: " << majorAncestor->name << ":" << majorBranchLength << std::endl;
     if(getMinorAnc() != NULL)
-        std::cout << "\tMinor anc: " << minorAncestor->name << std::endl;
+        std::cout << "\tMinor anc: " << minorAncestor->name << ":" << minorBranchLength << std::endl;
     
     if(bootSupport != -1)
         std::cout << "\tBoot supp: " << bootSupport << std::endl;

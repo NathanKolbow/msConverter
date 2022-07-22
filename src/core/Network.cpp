@@ -29,6 +29,7 @@
 #include <string.h>
 #include <algorithm>
 #include <typeinfo>
+#include <stdexcept>
 
 
 bool WARNINGS_ENABLED = true;
@@ -211,8 +212,15 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
 
             // If we couldn't find one or both of the taxa involved, this is an error; quit
             if(fromTaxa == NULL || toTaxa == NULL) {
-                std::cerr << "ERROR: When finding both taxa in a join event, one or both taxa could not be found; quitting." << std::endl;
-                exit(-1);
+                std::cerr << std::endl << std::endl << "ERROR: When finding both taxa in a join event, one or both taxa could not be found." << std::endl;
+                std::cerr << "\tMS DUMP:" << std::endl;
+                for(MSEvent *e : events) {
+                    if(e->getEventType() == join)
+                        std::cerr << "\t" << ((MSJoinEvent*)e)->toString() << std::endl;
+                    else
+                        std::cerr << "\t" << ((MSSplitEvent*)e)->toString() << std::endl;
+                }
+                throw std::invalid_argument("bad ms input");
             }
 
             // Create a new parent node pointing back to both of these nodes
@@ -263,8 +271,8 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
             
             // If p is still NULL, this is an error; quit
             if(p == NULL) {
-                std::cerr << "ERROR: Node involved in split event not found when split event was reached; quitting." << std::endl;
-                exit(-1);
+                std::cerr << "ERROR: Node involved in split event not found when split event was reached." << std::endl;
+                throw std::invalid_argument("bad ms input");
             }
 
             // If p is a leaf then we actually need to create a new node
@@ -317,8 +325,16 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
             nodes.push_back(min);
             nodes.push_back(maj);
         } else {
-            std::cerr << "ERROR: MSEvent is neither a split or join event; quitting." << std::endl;
-            exit(-1);
+            std::cerr << "ERROR: MSEvent is neither a split or join event." << std::endl;
+            throw std::invalid_argument("bad ms input");
+        }
+    }
+
+    // find and set the root
+    for(Node *p : nodes) {
+        if(p->getMajorAnc() == NULL) {
+            root = p;
+            break;
         }
     }
 
@@ -357,12 +373,12 @@ void Network::postmsPatchAndRename(void) {
 
             // If what we got is not what we expected, throw an error. This should never be thrown, this is just a sanity check really
             if(anc == NULL || child == NULL || nodes[i]->getRht() != NULL || nodes[i]->getMinorAnc() != NULL) {
-                std::cerr << "ERROR: When patching network in the MSEvent reading process, one or more of the children or ancestors of a redundant node were not what we expected; quitting." << std::endl;
-                exit(-1);
+                std::cerr << "ERROR: When patching network in the MSEvent reading process, one or more of the children or ancestors of a redundant node were not what we expected." << std::endl;
+                throw std::invalid_argument("bad ms input");
             }
 
             // anc --> child
-            if(anc->getLft() != NULL) {
+            if(anc->getLft() != NULL && anc->getLft() != nodes[i]) {
                 anc->setRht(child);
                 anc->setGammaRht(child->getGamma());
             } else {
@@ -396,9 +412,9 @@ void Network::postmsPatchAndRename(void) {
 
     // Sort the indices to be removed in reverse order, so that we can remove them without disrupting the order along the way
     std::sort(removeMe.begin(), removeMe.end(),
-    [](int a, int b) {
-        return(a > b);
-    }
+        [](int a, int b) {
+            return(a > b);
+        }
     );
     for(int idx : removeMe) {
         Node *n = nodes[idx];
@@ -480,8 +496,8 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
 
     // When we get out of the for loop, spaceCount should be exactly 0. Throw an error if this is not the case
     if(spaceCount != 0) {
-        std::cerr << "ERROR: Input ms command seqeuence was not in expected format; quitting." << std::endl;
-        exit(-1);
+        std::cerr << "ERROR: Input ms command seqeuence was not in expected format." << std::endl;
+        throw std::invalid_argument("bad ms input");
     }
 
     // Parse the events
@@ -542,8 +558,8 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
             events.push_back(e);
         } else {
             // Improper input
-            std::cerr << "ERROR: Input ms command invalid; quitting." << std::endl;
-            exit(-1);
+            std::cerr << "ERROR: Input ms command invalid." << std::endl;
+            throw std::invalid_argument("bad ms input");
         }
     }
 
@@ -700,8 +716,8 @@ void Network::buildFromNewick(std::string newickStr) {
                 readingBootSupport = false;
                 readingGamma = true;
             } else if(readingGamma) {
-                std::cerr << "ERROR: Read a sequence of four colons (possibly with names/numbers in between some of them). This is not allowed by the format; quitting." << std::endl;
-                exit(-1);
+                std::cerr << "ERROR: Read a sequence of four colons (possibly with names/numbers in between some of them). This is not allowed by the format." << std::endl;
+                throw std::invalid_argument("bad newick input");
             } else {
                 // begin reading a branch length
                 readingBranchLength = true;
@@ -837,9 +853,29 @@ void Network::setTimeRecur(Node *p) {
     double timeFollowingMaj = majAnc->getTime() + p->getMajorBranchLength();
     double timeFollowingMin = (minAnc == NULL) ? timeFollowingMaj : minAnc->getTime() + p->getMinorBranchLength();
 
+
     if(std::abs(timeFollowingMaj - timeFollowingMin) > 1e-9) {
-        std::cerr << "ERROR: Branch lengths leading to node " << p->getName() << " disagree! Lengths are " << timeFollowingMaj << " and " << timeFollowingMin << "; quitting." << std::endl;
-        exit(-1);
+        std::cerr << "ERROR: Branch lengths leading to node " << p->getName() << " disagree! Lengths are " << timeFollowingMaj << " and " << timeFollowingMin << "." << std::endl;
+        std::cerr << "\tParents are " << majAnc->getName() << " and " << ((minAnc == NULL)?"":minAnc->getName()) << " respectively." << std::endl;
+        std::cerr << "\t" << p->getMajorBranchLength() << ", " << p->getMinorBranchLength() << std::endl;
+
+        // need to do some serious debugging here...
+        std::cerr << "\tFOLLOWING MAJOR:" << p->getMajorBranchLength() << std::endl;
+        Node *temp = majAnc;
+        while(temp != root) {
+            std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
+            temp = temp->getMajorAnc();
+        }
+        if(minAnc != NULL) {
+            std::cerr << "\tFOLLOWING MINOR:" << p->getMinorBranchLength() << std::endl;
+            temp = minAnc;
+            while(temp != root) {
+                std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
+                temp = temp->getMajorAnc();
+           }
+        }
+        minAnc->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc();  
+        throw std::invalid_argument("branch length mismatch");
     }
     p->setTime(timeFollowingMaj);
 
@@ -1024,14 +1060,14 @@ void Network::writeNetwork(Node* p, std::stringstream& ss, bool minorHybrid, boo
         } else {
             ss << "(";
 
-            if(randomWrite && p->getRht() != NULL) {
+            if(randomWrite && p->getRht() != NULL && p->getLft() != NULL) {
                 // With a 50% chance, go right instead of left
                 float randVal = (float) rand() / RAND_MAX;
                 if(randVal > 0.50) {
                     // Write the network as per usual.
-                    writeNetwork(p->getRht(), ss, p->getGammaRht() != 0 && p->getRht()->getMinorAnc() == p, randomWrite);
+                    writeNetwork(p->getRht(), ss, p->getRht()->getMinorAnc() == p, randomWrite);
                     ss << ",";
-                    writeNetwork(p->getLft(), ss, p->getGammaLft() != 0 && p->getLft()->getMinorAnc() == p, randomWrite);
+                    writeNetwork(p->getLft(), ss, p->getLft()->getMinorAnc() == p, randomWrite);
 
                     if(p->getMajorAnc() == NULL)
                         // Root only have a name; not branch lengths or boot support or gamma
@@ -1044,10 +1080,10 @@ void Network::writeNetwork(Node* p, std::stringstream& ss, bool minorHybrid, boo
             }
             
             // Write the network as per usual.
-            writeNetwork(p->getLft(), ss, p->getGammaLft() != 0 && p->getLft()->getMinorAnc() == p, randomWrite);
+            writeNetwork(p->getLft(), ss, p->getLft()->getMinorAnc() == p, randomWrite);
             if(p->getRht() != NULL) {
                 ss << ",";
-                writeNetwork(p->getRht(), ss, p->getGammaRht() != 0 && p->getRht()->getMinorAnc() == p, randomWrite);
+                writeNetwork(p->getRht(), ss, p->getRht()->getMinorAnc() == p, randomWrite);
             }
             if(p->getMajorAnc() == NULL)
                 // Root only have a name; not branch lengths or boot support or gamma
@@ -1148,8 +1184,8 @@ std::vector<MSEvent*> Network::toms(double endTime) {
         for(i = 0; i < activeNodes.size(); i++) {
             Node *p = activeNodes[i];
             if(p == NULL) {
-                std::cerr << "ERROR: Active node is blank; quitting." << std::endl << std::flush;
-                exit(-1);
+                std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
+                throw std::invalid_argument("active node is blank");
             }
 
             Node *majAnc = p->getMajorAnc();
