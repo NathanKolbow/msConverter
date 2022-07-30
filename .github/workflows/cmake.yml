@@ -42,6 +42,7 @@ jobs:
       run: ctest -C ${{env.BUILD_TYPE}}
 
     - name: Upload test log
+      if: always()
       uses: actions/upload-artifact@v3
       with:
         name: CTest log
