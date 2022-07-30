@@ -7,6 +7,8 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include <ostream>
+
 class Node;
 
 class Network {
@@ -20,10 +22,13 @@ class Network {
         Network(std::string str, std::string strFormat);
         Network(std::vector<MSEvent*> events);
         std::string getMSString(void);
+        void prettyPrint(std::ostream &str);
+        inline std::vector<Node*> getLeaves();
 
         std::vector<Node*> getNodes(void) { return nodes; }
         bool permuteRandomGamma(double gamma);
         void makeUltrametric(void);
+
 
     protected:
         Network(void) { }

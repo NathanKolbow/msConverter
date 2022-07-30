@@ -220,7 +220,6 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
                     else
                         std::cerr << "\t" << ((MSSplitEvent*)e)->toString() << std::endl;
                 }
-                fromTaxa->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad ms input");
             }
 
@@ -273,7 +272,6 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
             // If p is still NULL, this is an error; quit
             if(p == NULL) {
                 std::cerr << "ERROR: Node involved in split event not found when split event was reached." << std::endl;
-                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad ms input");
             }
 
@@ -389,8 +387,13 @@ void Network::postmsPatchAndRename(void) {
             }
 
             // child --> anc
-            child->setMajorAnc(anc);
-            child->setMajorBranchLength(anc->getTime() - child->getTime());
+            if(child->getMajorAnc() != NULL && child->getMajorAnc() != nodes[i]) {
+                child->setMinorAnc(anc);
+                child->setMinorBranchLength(anc->getTime() - child->getTime());
+            } else {
+                child->setMajorAnc(anc);
+                child->setMajorBranchLength(anc->getTime() - child->getTime());
+            }
 
             // Queue the redundant node for removal
             removeMe.push_back(i);
@@ -404,7 +407,7 @@ void Network::postmsPatchAndRename(void) {
                 // This is an internal node; we have to check whether it is a hybrid
                 if(nodes[i]->getMinorAnc() != NULL)
                     // hybrid node
-                    nodes[i]->setName(getInternalName(internalNodeCount++) + "#" + std::to_string(hybridCount++));
+                    nodes[i]->setName(getInternalName(internalNodeCount++) + "#H" + std::to_string(hybridCount++));
                 else
                     // not a hybrid node
                     nodes[i]->setName(getInternalName(internalNodeCount++));
@@ -421,7 +424,7 @@ void Network::postmsPatchAndRename(void) {
     for(int idx : removeMe) {
         Node *n = nodes[idx];
         nodes.erase(std::next(nodes.begin(), idx));
-
+        
         // Don't leak memory
         delete n;
     }
@@ -442,6 +445,70 @@ std::string Network::getInternalName(int i) {
     return name;
 }
 
+// prints a (relatively) pretty diagram of the network to std::cout
+void Network::prettyPrint(std::ostream &str) {
+    str << "Newick: " << getNewickRepresentation() << std::endl;
+    str << "Node addrs: ";
+    for(Node *p : nodes)
+        str << p << ", ";
+    str << std::endl;
+
+    std::vector<Node*> levelNodes = getLeaves();
+    std::vector<Node*> temp;
+    while(levelNodes.size() > 0) {
+        for(Node *p : levelNodes)
+            str << p->getLft() << "(" << (p->getLft() != NULL ? p->getLft()->getName() + " " : "-- ") << "), " << p->getRht() << "(" << (p->getRht() != NULL ? p->getRht()->getName() + " " : "-- ") << ")\t\t\t";
+        str << std::endl;
+
+        for(Node *p : levelNodes)
+            str << "↑\t\t\t\t\t\t\t\t\t\t";
+        str << std::endl;
+
+        for(Node *p : levelNodes)
+            str << p->getName() << " (" << p << ")\t\t\t\t\t\t\t";
+        str << std::endl;
+        
+        for(Node *p : levelNodes)
+            str << "↓\t\t\t\t\t\t\t\t\t\t";
+        str << std::endl;
+            
+        for(Node *p : levelNodes)
+            str << p->getMajorAnc() << "(" << (p->getMajorAnc() != NULL ? p->getMajorAnc()->getName() + " " : "-- ") << ")" << ", " << p->getMinorAnc() << "(" << (p->getMinorAnc() != NULL ? p->getMinorAnc()->getName() + " " : "-- ") << ")\t\t\t";
+        str << std::endl << std::endl;
+
+        // re-populate the vector
+        for(Node *p : levelNodes) {
+            bool inTemp = false;
+            if(p->getMajorAnc() != NULL) {
+                for(Node *search : temp) {
+                    if(search == p->getMajorAnc()) {
+                        inTemp = true;
+                        break;
+                    }
+                }
+                if(!inTemp)
+                    temp.push_back(p->getMajorAnc());
+            }
+
+            inTemp = false;
+            if(p->getMinorAnc() != NULL) {
+                for(Node *search : temp) {
+                    if(search == p->getMinorAnc()) {
+                        inTemp = true;
+                        break;
+                    }
+                }
+                if(!inTemp)
+                    temp.push_back(p->getMinorAnc());
+            }
+        }
+
+        levelNodes.clear();
+        levelNodes = temp;
+        temp.clear();
+    }
+}
+
 // Gets an internal node name from an integer; used in the postmsPatchAndRename function
 // 0 --> a, 1 --> b, ..., 25 --> z, 26 --> za, ..., 51 --> zz, ..., 77 --> zzz, ...
 std::string Network::getLeafName(int i) {
@@ -457,12 +524,7 @@ std::string Network::getLeafName(int i) {
 }
 
 int Network::getTotalExtantTaxa(void) {
-    int count = 0;
-    for(Node *p : nodes) {
-        if(p->getLft() == p->getRht())
-            count++;
-    }
-    return count;
+    return getLeaves().size();
 }
 
 // IMPORTANT NOTE: for ms commands, RIGHT NOW (to be changed), the only accepted input form is
@@ -568,15 +630,21 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
     return events;
 }
 
-void Network::makeUltrametric(void) {
+inline std::vector<Node*> Network::getLeaves(void) {
     std::vector<Node*> leaves;
-    double endTime = 0;
-    for(Node *p : nodes) {
-        if(p->getLft() == p->getRht()) {
+    for(Node *p : nodes)
+        if(p->getLft() == p->getRht())
             leaves.push_back(p);
-            endTime = std::max(endTime, p->getTime());
-        }
+    return leaves;    
+}
+
+void Network::makeUltrametric(void) {
+    std::vector<Node*> leaves = getLeaves();
+    double endTime = 0;
+    for(Node *p : leaves) {
+        endTime = std::max(endTime, p->getTime());
     }
+
     for(Node *p : leaves) {
         p->setMajorBranchLength(p->getMajorBranchLength() + (endTime - p->getTime()));
         if(p->getMinorAnc() != NULL)
@@ -719,7 +787,6 @@ void Network::buildFromNewick(std::string newickStr) {
                 readingGamma = true;
             } else if(readingGamma) {
                 std::cerr << "ERROR: Read a sequence of four colons (possibly with names/numbers in between some of them). This is not allowed by the format." << std::endl;
-                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad newick input");
             } else {
                 // begin reading a branch length
@@ -866,19 +933,17 @@ void Network::setTimeRecur(Node *p) {
         std::cerr << "\tFOLLOWING MAJOR:" << p->getMajorBranchLength() << std::endl;
         Node *temp = majAnc;
         while(temp != root) {
-            std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
+            // std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
             temp = temp->getMajorAnc();
         }
         if(minAnc != NULL) {
             std::cerr << "\tFOLLOWING MINOR:" << p->getMinorBranchLength() << std::endl;
             temp = minAnc;
             while(temp != root) {
-                std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
+                // std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
                 temp = temp->getMajorAnc();
            }
         }
-        minAnc->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc();  
-        p->getMinorAnc()->getMinorAnc()->getMinorAnc();
         throw std::invalid_argument("branch length mismatch");
     }
     p->setTime(timeFollowingMaj);
@@ -1059,17 +1124,17 @@ void Network::writeNetwork(Node* p, std::stringstream& ss, bool minorHybrid, boo
     // Different rules apply when dealing with hybrids, but we still want to traverse them normally once.
     // The variable `minorHybrid` allows us to traverse a hybrid node twice, differently both times.
     if(p != NULL) {
-        std::stringstream pss;
-        pss << p;
-        std::cerr << "p: " << pss.str() << ":" << p->getName() << ":" << std::endl;
-        std::cerr << "\n";
+        // std::stringstream pss;
+        // pss << p;
+        // std::cerr << "p: " << pss.str() << ":" << p->getName() << ":" << std::endl;
+        // std::cerr << "\n";
 
-        std::stringstream mass;
-        mass << p->getMinorAnc();
+        // std::stringstream mass;
+        // mass << p->getMinorAnc();
 
-        std::cerr << p->getName() << ":" << minorHybrid << ":" << (p->getMajorAnc() != NULL ? p->getMajorAnc()->getName() : "") << ":" << ((p->getMinorAnc() != NULL) ? mass.str() /*p->getMinorAnc()->getName()*/ : "") << std::flush << std::endl << std::flush;
+        // std::cerr << p->getName() << ":" << minorHybrid << ":" << (p->getMajorAnc() != NULL ? p->getMajorAnc()->getName() : "") << ":" << ((p->getMinorAnc() != NULL) ? mass.str() /*p->getMinorAnc()->getName()*/ : "") << std::flush << std::endl << std::flush;
 
-        std::cerr << "\n";
+        // std::cerr << "\n";
         if(p->getLft() == NULL || minorHybrid) {
             ss << p->getNewickFormattedName(minorHybrid, (minorHybrid ? (p == p->getMinorAnc()->getLft() ? p->getMinorAnc()->getGammaLft() : p->getMinorAnc()->getGammaRht()) : -1));
         } else {
@@ -1200,7 +1265,6 @@ std::vector<MSEvent*> Network::toms(double endTime) {
             Node *p = activeNodes[i];
             if(p == NULL) {
                 std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
-                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("active node is blank");
             }
 

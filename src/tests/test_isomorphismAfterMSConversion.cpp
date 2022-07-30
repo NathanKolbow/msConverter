@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(test1) {
 
     // convert the newicks to ms, then back to newick
     for(std::string newick : newicks) {
+        std::cerr << "Input Newick: " << newick << std::endl;
         std::string msArgs = ss::newickToMS(newick);
         argsOnly(msArgs);
         
@@ -45,5 +46,6 @@ BOOST_AUTO_TEST_CASE(test1) {
         std::cerr << "\tTesting " << newick << " vs. " << convNewick << std::endl;
         networksAreIsomorphic = isomorphicNewick(newick, convNewick);
         BOOST_CHECK(networksAreIsomorphic);
+        std::cerr << std::endl;
     }
 }
