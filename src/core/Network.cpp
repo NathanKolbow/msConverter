@@ -660,7 +660,7 @@ std::string Network::getMSString(void) {
 
     // used if the tree is not ultrametric
     std::vector<Node*> leaves;
-    std::vector<int> times;
+    std::vector<double> times;
 
     // check to see if it is ultrametric
     for(Node *p : nodes) {
