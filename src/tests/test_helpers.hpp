@@ -22,10 +22,9 @@ inline std::string getNewickPairsFilePath(void) {
 
 inline std::vector<Network*> loadNewickNetworks(void) {
     std::ifstream is(getNewickFilePath());
-    BOOST_TEST(!is.fail());
     if(is.fail()) {
-        std::cerr << "Failed to load newick-strings.txt." << std::endl;
-        exit(-1);
+        std::cerr << "Failed to load newick-strings.txt; used path: " << getNewickFilePath() << std::endl;
+        BOOST_TEST(!is.fail());
     }
 
     std::vector<Network*> newicks;
@@ -41,8 +40,8 @@ inline std::vector<Network*> loadNewickNetworks(void) {
 inline std::vector<std::string> loadNewickStrings(void) {
     std::ifstream is(getNewickFilePath());
     if(is.fail()) {
-        std::cerr << "Failed to load newick-strings.txt." << std::endl;
-        exit(-1);
+        std::cerr << "Failed to load newick-strings.txt; used path: " << getNewickFilePath() << std::endl;
+        BOOST_TEST(!is.fail());
     }
 
     std::vector<std::string> newicks;
@@ -59,8 +58,8 @@ inline std::vector<std::string> loadNewickStrings(void) {
 inline std::vector<std::pair<std::string, std::string>> getNewickStringPairs(void) {
     std::ifstream is(getNewickPairsFilePath());
     if(is.fail()) {
-        std::cerr << "Failed to load newick-string-pairs.txt." << std::endl;
-        exit(-1);
+        std::cerr << "Failed to load newick-string-pairs.txt; used path: " << getNewickPairsFilePath() << std::endl;
+        BOOST_TEST(!is.fail());
     }
 
     std::vector<std::pair<std::string, std::string>> pairs;
