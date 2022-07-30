@@ -14,10 +14,10 @@
 namespace fs = std::filesystem;
 
 inline std::string getNewickFilePath(void) { 
-    return fs::current_path().append("..\\..\\..\\newick-strings.txt").string();
+    return fs::current_path().append("../../../newick-strings.txt").string();
 }
 inline std::string getNewickPairsFilePath(void) {
-    return fs::current_path().append("..\\..\\..\\newick-string-pairs.txt").string();
+    return fs::current_path().append("../../../newick-string-pairs.txt").string();
 }
 
 inline std::vector<Network*> loadNewickNetworks(void) {
