@@ -26,7 +26,7 @@
 Node::Node(void) {
     left = right = majorAncestor = minorAncestor = NULL;
     index = 0;
-    name = std::string("");
+    name = std::string("<blank_name>");
     majorBranchLength = 0;
     minorBranchLength = 0;
     gamma = gammaLft = gammaRht = 0;
@@ -40,8 +40,6 @@ std::string Node::getNewickFormattedName(bool fromMinorEdge, double gamma) {
                   ":" << (bootSupport != -1 ? std::to_string(bootSupport) : "") <<
                   ":" << (gamma != -1 ? std::to_string(gamma) : "");
     return ss.str();
-
-    // p->getName() << ":" << std::fixed << std::setprecision(5) << (minorHybrid ? p->getMinorBranchLength() : p->getMajorBranchLength());
 }
 
 void Node::printInfo(void) {

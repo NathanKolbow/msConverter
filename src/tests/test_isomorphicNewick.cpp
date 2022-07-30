@@ -44,7 +44,7 @@ BOOST_GLOBAL_FIXTURE(GlobalFixture);
 
 // isomorphicNewick tests where the networks are truly isomorphic
 BOOST_AUTO_TEST_CASE(test1) {
-    int nRand = 10;
+    int nRand = 2;
     for(Network *net : loadNewickNetworks()) {
         std::vector<std::string> randomNewicks = net->getRandomNewickRepresentations(nRand);
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test1) {
 // isomorphicNewick tests where the networks are obvioiusly not isomorphic
 BOOST_AUTO_TEST_CASE(test2) {
     // Obvious falses, comparing totally different networks
-    int nRand = 10;
+    int nRand = 2;
     std::vector<std::string> newicks = loadNewickStrings();
     for(unsigned int n=0; n < newicks.size()-1; n++) {
         std::vector<std::string> randoms1 = Network(newicks[n], "newick").getRandomNewickRepresentations(nRand);

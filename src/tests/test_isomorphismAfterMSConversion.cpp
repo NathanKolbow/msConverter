@@ -38,10 +38,12 @@ BOOST_AUTO_TEST_CASE(test1) {
     for(std::string newick : newicks) {
         std::string msArgs = ss::newickToMS(newick);
         argsOnly(msArgs);
+        
         bool networksAreIsomorphic = false;
-        try {
-            networksAreIsomorphic = isomorphicNewick(newick, ss::msToNewick(msArgs));
-        } catch(...) {}
+        std::string convNewick = ss::msToNewick(msArgs);
+
+        std::cerr << "\tTesting " << newick << " vs. " << convNewick << std::endl;
+        networksAreIsomorphic = isomorphicNewick(newick, convNewick);
         BOOST_CHECK(networksAreIsomorphic);
     }
 }

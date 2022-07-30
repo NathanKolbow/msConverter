@@ -220,6 +220,7 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
                     else
                         std::cerr << "\t" << ((MSSplitEvent*)e)->toString() << std::endl;
                 }
+                fromTaxa->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad ms input");
             }
 
@@ -272,6 +273,7 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
             // If p is still NULL, this is an error; quit
             if(p == NULL) {
                 std::cerr << "ERROR: Node involved in split event not found when split event was reached." << std::endl;
+                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad ms input");
             }
 
@@ -402,10 +404,10 @@ void Network::postmsPatchAndRename(void) {
                 // This is an internal node; we have to check whether it is a hybrid
                 if(nodes[i]->getMinorAnc() != NULL)
                     // hybrid node
-                    nodes[i]->setName(getInternalName(internalNodeCount++));
+                    nodes[i]->setName(getInternalName(internalNodeCount++) + "#" + std::to_string(hybridCount++));
                 else
                     // not a hybrid node
-                    nodes[i]->setName(getInternalName(internalNodeCount++) + "#" + std::to_string(hybridCount++));
+                    nodes[i]->setName(getInternalName(internalNodeCount++));
             }
         }
     }
@@ -717,6 +719,7 @@ void Network::buildFromNewick(std::string newickStr) {
                 readingGamma = true;
             } else if(readingGamma) {
                 std::cerr << "ERROR: Read a sequence of four colons (possibly with names/numbers in between some of them). This is not allowed by the format." << std::endl;
+                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("bad newick input");
             } else {
                 // begin reading a branch length
@@ -875,6 +878,7 @@ void Network::setTimeRecur(Node *p) {
            }
         }
         minAnc->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc()->getMinorAnc();  
+        p->getMinorAnc()->getMinorAnc()->getMinorAnc();
         throw std::invalid_argument("branch length mismatch");
     }
     p->setTime(timeFollowingMaj);
@@ -1055,6 +1059,17 @@ void Network::writeNetwork(Node* p, std::stringstream& ss, bool minorHybrid, boo
     // Different rules apply when dealing with hybrids, but we still want to traverse them normally once.
     // The variable `minorHybrid` allows us to traverse a hybrid node twice, differently both times.
     if(p != NULL) {
+        std::stringstream pss;
+        pss << p;
+        std::cerr << "p: " << pss.str() << ":" << p->getName() << ":" << std::endl;
+        std::cerr << "\n";
+
+        std::stringstream mass;
+        mass << p->getMinorAnc();
+
+        std::cerr << p->getName() << ":" << minorHybrid << ":" << (p->getMajorAnc() != NULL ? p->getMajorAnc()->getName() : "") << ":" << ((p->getMinorAnc() != NULL) ? mass.str() /*p->getMinorAnc()->getName()*/ : "") << std::flush << std::endl << std::flush;
+
+        std::cerr << "\n";
         if(p->getLft() == NULL || minorHybrid) {
             ss << p->getNewickFormattedName(minorHybrid, (minorHybrid ? (p == p->getMinorAnc()->getLft() ? p->getMinorAnc()->getGammaLft() : p->getMinorAnc()->getGammaRht()) : -1));
         } else {
@@ -1185,6 +1200,7 @@ std::vector<MSEvent*> Network::toms(double endTime) {
             Node *p = activeNodes[i];
             if(p == NULL) {
                 std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
+                p->getMinorAnc()->getMinorAnc()->getMinorAnc();
                 throw std::invalid_argument("active node is blank");
             }
 
