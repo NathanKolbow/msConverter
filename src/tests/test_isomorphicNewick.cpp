@@ -73,3 +73,13 @@ BOOST_AUTO_TEST_CASE(test2) {
         }
     }
 }
+
+// isomorphicNewick tests comparing pairs of newick strings that ARE isomorphic but have
+// previously failed to be seen as isomorphic
+BOOST_AUTO_TEST_CASE(test3) {
+    std::vector<std::pair<std::string, std::string>> pairs = getNewickStringPairs();
+    for(std::pair<std::string, std::string> pair : pairs) {
+        std::cerr << pair.first << " vs. " << pair.second << std::endl;
+        BOOST_CHECK(isomorphicNewick(pair.first, pair.second));
+    }
+}

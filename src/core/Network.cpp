@@ -71,6 +71,8 @@ bool isomorphic(Network net1, Network net2) {
     while(root2->getMajorAnc() != NULL)
         root2 = root2->getMajorAnc();
 
+    // std::cerr << "root1: " << root1->getName() << ", root2: " << root2->getName() << std::endl;
+
     // Check for isomorphism recursively
     return isomorphicRecur(root1, root2);
 }
@@ -81,20 +83,20 @@ bool isomorphicRecur(Node *p1, Node *p2) {
         return true;
     // One is null but the other is not
     if(p1 != p2 && (p1 == NULL || p2 == NULL)) {
-        // std::cout << "Not isomorphic; " << (p1==NULL?p2->getName():p1->getName()) << " is not NULL, but its partner is.\n";
+        // std::cerr << "Not isomorphic; " << (p1==NULL?p2->getName():p1->getName()) << " is not NULL, but its partner is.\n";
         return false;
     }
 
     // Check for equivalent hybrid statuses
-    // if one is a hybrid but not the either, return false.
+    // if one is a hybrid but not the other, return false.
     if(p1->getMinorAnc() != p2->getMinorAnc() && (p1->getMinorAnc() == NULL || p2->getMinorAnc() == NULL)) {
-        // std::cout << "Hybrid status of " << p1->getName() << " and " << p2->getName() << " differs.\n";
+        // std::cerr << "Hybrid status of " << p1->getName() << " and " << p2->getName() << " differs.\n";
         return false;
     }
 
     // if branch info differs, return false.
     if(!nodeEquivBranches(p1, p2)) {
-        // std::cout << "Branches of " << p1->getName() << " and " << p2->getName() << " differ.\n";
+        // std::cerr << "Branches of " << p1->getName() << " and " << p2->getName() << " differ ((" << p1->getMajorBranchLength() << "," << p1->getMinorBranchLength() << "),(" << p2->getMajorBranchLength() << "," << p2->getMinorBranchLength() << ")).\n";
         return false;
     }
 
@@ -104,10 +106,20 @@ bool isomorphicRecur(Node *p1, Node *p2) {
     Node *left2 = p2->getLft();
     Node *right2 = p2->getRht();
 
+    // if(left1 != NULL)
+    //     std::cerr << " left1: " << left1->getName();
+    // if(right1 != NULL)
+    //     std::cerr << " right1: " << right1->getName();
+    // if(left2 != NULL)
+    //     std::cerr << " left2: " << left2->getName();
+    // if(right2 != NULL)
+    //     std::cerr << " right2: " << right2->getName();
+    // std::cerr << std::endl;
+
     // Check for equivalence of presence of children
     // if they have differing amount of present children, return false.
     if((left1 == NULL) + (right1 == NULL) != (left2 == NULL) + (right2 == NULL)) {
-        // std::cout << "Sum presence of children of " << p1->getName() << " and " << p2->getName() << " differs.\n";
+        // std::cerr << "Sum presence of children of " << p1->getName() << " and " << p2->getName() << " differs.\n";
         return false;
     }
 
@@ -277,13 +289,14 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
 
             // If p is a leaf then we actually need to create a new node
             // getLft will equal getRht exactly when both are NULL.
-            if(p->getLft() == p->getRht() && p->getTime() == 0) {
+            // if((p->getLft() == p->getRht() && p->getTime() == 0)) {
+            if(p->getTime() != e->getTime()) {
                 Node *newNode = new Node();
                 newNode->setName(p->getName());
                 newNode->setTime(e->getTime());
                 newNode->setLft(p);
                 p->setMajorAnc(newNode);
-                p->setMajorBranchLength(newNode->getTime());  // p->getTime() is 0
+                p->setMajorBranchLength(newNode->getTime() - p->getTime());  // p->getTime() is 0
                 nodes.push_back(newNode);
 
                 // Remove the leaf from activeNodes
@@ -380,10 +393,10 @@ void Network::postmsPatchAndRename(void) {
             // anc --> child
             if(anc->getLft() != NULL && anc->getLft() != nodes[i]) {
                 anc->setRht(child);
-                anc->setGammaRht(child->getGamma());
+                anc->setGammaRht(nodes[i]->getGamma());
             } else {
                 anc->setLft(child);
-                anc->setGammaLft(child->getGamma());
+                anc->setGammaLft(nodes[i]->getGamma());
             }
 
             // child --> anc
@@ -1086,10 +1099,8 @@ int Network::hybridNameIndex(std::string val, std::vector<std::string> list) {
     return -1;
 }
 
-int Network::getLength(std::string val) { return val.length(); }
-
 bool Network::isHybridName(std::string val) {
-    int len = getLength(val);
+    int len = val.length();
     for(int i = 0; i < len; i++) {
         if(val[i] == '#')
             return true;
@@ -1312,14 +1323,16 @@ std::vector<MSEvent*> Network::toms(double endTime) {
                 }
                 // II. if only one anc is named: split, give the blank anc a new name, and then join with the named anc
                 else if((majAnc->getHiddenID() == -1) != (minAnc->getHiddenID() == -1)) {
-                    Node *namedAnc = (majAnc->getHiddenID() == -1) ? minAnc : majAnc;
                     Node *unnamedAnc = (majAnc->getHiddenID() == -1) ? majAnc : minAnc;
+                    Node *namedAnc = (unnamedAnc == majAnc) ? minAnc : majAnc;
 
                     // p is coalescing into unnamedAnc, so gamma comes from unnamedAnc 
                     double gamma = (unnamedAnc->getLft() == p) ? unnamedAnc->getGammaLft() : unnamedAnc->getGammaRht();
 
-                    // Split
-                    events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), gamma));
+                    // Split; 1-gamma because gamma comes from unnamedAnc, which we are merging into.
+                    //        however, namedAnc is the only anc we are able to generate a join event for
+                    //        right now (b/c it's the only named anc), so this split event needs to be 1-gamma
+                    events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), 1-gamma));
 
                     // Give the blank anc a new name and add it to the queue
                     unnamedAnc->setHiddenID(popnCounter++);

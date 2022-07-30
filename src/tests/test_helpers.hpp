@@ -13,8 +13,11 @@
 
 namespace fs = std::filesystem;
 
-inline std::string getNewickFilePath(void) {
-    return std::string("C:\\Users\\Nathan\\OneDrive\\School\\Research\\Newick-to-ms\\newick-strings.txt");
+inline std::string getNewickFilePath(void) { 
+    return fs::current_path().append("..\\..\\..\\newick-strings.txt").string();
+}
+inline std::string getNewickPairsFilePath(void) {
+    return fs::current_path().append("..\\..\\..\\newick-string-pairs.txt").string();
 }
 
 inline std::vector<Network*> loadNewickNetworks(void) {
@@ -37,7 +40,6 @@ inline std::vector<Network*> loadNewickNetworks(void) {
 
 inline std::vector<std::string> loadNewickStrings(void) {
     std::ifstream is(getNewickFilePath());
-    BOOST_TEST(!is.fail());
     if(is.fail()) {
         std::cerr << "Failed to load newick-strings.txt." << std::endl;
         exit(-1);
@@ -49,6 +51,33 @@ inline std::vector<std::string> loadNewickStrings(void) {
     }
     BOOST_TEST(newicks.size() != 0);
     return newicks;
+}
+
+// loads paired newick strings from newick-string-pairs.txt
+// used chiefly for testing against identical newicks that
+// have failed to pass as isomorphic at some point in the past
+inline std::vector<std::pair<std::string, std::string>> getNewickStringPairs(void) {
+    std::ifstream is(getNewickPairsFilePath());
+    if(is.fail()) {
+        std::cerr << "Failed to load newick-string-pairs.txt." << std::endl;
+        exit(-1);
+    }
+
+    std::vector<std::pair<std::string, std::string>> pairs;
+    for(std::string str; std::getline(is, str);) {
+        short _semicolon = 0;
+        while(str[_semicolon] != ';' && str[_semicolon] != '\0')
+            _semicolon++;
+        
+        if(str[_semicolon] == '\0') {
+            std::cerr << "Reached end of string in newick-string-pairs.txt without a semi-colon." << std::endl;
+            exit(-1);
+        }
+
+        pairs.push_back(std::pair<std::string, std::string>(std::string(str.substr(0, _semicolon+1)), std::string(str.substr(_semicolon+1, str.length() - _semicolon))));
+    }
+
+    return pairs;
 }
 
 inline void argsOnly(std::string &msCmd) {
