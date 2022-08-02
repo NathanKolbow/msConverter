@@ -39,10 +39,8 @@ BOOST_AUTO_TEST_CASE(test1) {
         std::string msArgs = ss::newickToMS(newick);
         argsOnly(msArgs);
         
-        bool networksAreIsomorphic = false;
         std::string convNewick = ss::msToNewick(msArgs);
-
-        networksAreIsomorphic = isomorphicNewick(newick, convNewick);
-        BOOST_CHECK(networksAreIsomorphic);
+        
+        BOOST_CHECK(isomorphicNewick(newick, convNewick));
     }
 }

@@ -59,12 +59,11 @@ namespace SimSuite {
 
     std::string newickToMSSafe(std::string newickStr) {
         std::string msCmd = newickToMS(newickStr);
+
         std::string msArgs = std::string(msCmd);
         argsOnly(msArgs);
-        Network newickNet(newickStr, "newick");
-        Network msNet(msArgs, "ms");
 
-        if(!isomorphic(newickNet, msNet))
+        if(!isomorphicNewick(newickStr, msToNewick(msArgs)))
             throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
         
         return msCmd;
@@ -85,10 +84,7 @@ namespace SimSuite {
             std::string msArgs = std::string(msCmd);
             argsOnly(msArgs);
 
-            Network newickNet(line, "newick");
-            Network msNet(msArgs, "ms");
-
-            if(!isomorphic(newickNet, msNet))
+            if(!isomorphicNewick(line, msToNewick(msArgs)))
                 throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickFileToMSSafe]");
             msStrs.push_back(msCmd);
         }
