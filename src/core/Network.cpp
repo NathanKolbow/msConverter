@@ -62,6 +62,14 @@ bool Network::permuteRandomGamma(double change) {
 }
 
 bool isomorphic(Network net1, Network net2) {
+    std::cerr << "net1 leaf times:" << std::endl;
+    for(Node *p : net1.getLeaves())
+        std::cerr << "\t" << p->getName() << ": " << p->getTime() << std::endl;
+
+    std::cerr << "\nnet2 leaf times:" << std::endl;
+    for(Node *p : net2.getLeaves())
+        std::cerr << "\t" << p->getName() << ": " << p->getTime() << std::endl;
+
     // Find the root of each network
     Node *root1 = net1.getNodes()[0];
     while(root1->getMajorAnc() != NULL)
@@ -155,12 +163,63 @@ bool isomorphicNewick(std::string newick1, std::string newick2) {
     return isomorphic(Network(newick1, "newick"), Network(newick2, "newick"));
 }
 
+// returns true if none of the taxa involved in e are contained in taxa_at_time
+// else returns false
+inline bool tryAddNodes(MSEvent *e, std::vector<int> &taxa_at_time) {
+    if(e->getEventType() == split) {
+        int taxa = ((MSSplitEvent*)e)->getTaxa();
+
+        if(std::count(taxa_at_time.begin(), taxa_at_time.end(), taxa))
+            return false;
+        else
+            taxa_at_time.push_back(taxa);
+
+    } else {
+        int tax1 = ((MSJoinEvent*)e)->getMajorTaxa();
+        int tax2 = ((MSJoinEvent*)e)->getMinorTaxa();
+
+        if(std::count(taxa_at_time.begin(), taxa_at_time.end(), tax1))
+            return false;
+        else
+            taxa_at_time.push_back(tax1);
+
+        if(std::count(taxa_at_time.begin(), taxa_at_time.end(), tax2))
+            return false;
+        else
+            taxa_at_time.push_back(tax2);
+    }
+    return true;
+}
+
 void Network::buildFromMS(std::vector<MSEvent*> events) {
+    // initial checks to make sure everything is good in the ms inputs
+    double curr_time = -1;
+    std::vector<int> taxa_at_time;
+    for(MSEvent *e : events) {
+        if(e->getTime() > curr_time) {
+            curr_time = e->getTime();
+            taxa_at_time.clear();
+
+            tryAddNodes(e, taxa_at_time);
+        } else if(e->getTime() < curr_time) {
+            std::cerr << "ERROR: ms events are not in time order." << std::endl;
+            throw std::invalid_argument("ms input not in time order");
+        } else {
+            if(!tryAddNodes(e, taxa_at_time)) {
+                // one of the taxa in e was already involved at this time
+                std::cerr << "WARNING: some taxa are involved in multiple ms events at the same timestamp. This is an edge case which is not currently supported. Results may be error-prone." << std::endl;
+                break;
+            }
+        }
+    }
+
+
     // First, order the events backwards in time (from tips to root) so that they
     // can be read in order.
-    sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
-        return a->getTime() < b->getTime();
-    });
+    // ---- don't actually do this. ms requires arguments in time-order.
+    // sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
+    //     return a->getTime() < b->getTime();
+    // });
 
     // Start by figuring out how many leaves we have. This is equal to the largest number
     // in the MSEvent's minus the total number of MSSplitEvent's
@@ -224,7 +283,11 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
 
             // If we couldn't find one or both of the taxa involved, this is an error; quit
             if(fromTaxa == NULL || toTaxa == NULL) {
-                std::cerr << std::endl << std::endl << "ERROR: When finding both taxa in a join event, one or both taxa could not be found." << std::endl;
+                if(fromTaxa == toTaxa)
+                    std::cerr << std::endl << std::endl << "ERROR: When finding both taxa in a join event (" << e->getMajorTaxa() << "," << e->getMinorTaxa() << ")@" << e->getTime() << ", both taxa could not be found." << std::endl;
+                else
+                    std::cerr << std::endl << std::endl << "ERROR: When finding both taxa in a join event (" << e->getMajorTaxa() << "," << e->getMinorTaxa() << ")@" << e->getTime() << ", " << (fromTaxa == NULL ? e->getMajorTaxa() : e->getMinorTaxa()) << " could not be found." << std::endl;
+
                 std::cerr << "\tMS DUMP:" << std::endl;
                 for(MSEvent *e : events) {
                     if(e->getEventType() == join)
@@ -1263,15 +1326,18 @@ std::vector<MSEvent*> Network::toms(double endTime) {
      * If the node has one ancestor, this is a coalescence event. If this node's sister is not named, do not perform this
      * coalsecence yet. Wait for the node to be named.
      */
-    // TODO: Definitely need to go through every event chronologically. Otherwise directionality is lost.
-    // In order to do it chronologically: idk. have to think about this more.
-    // Also: maybe we don't actually have to do it chronologically, and the direction can be preserved b/c we specifically
-    //       assign MinorAnc() in a way that can be used to maintain directionality.
     while(activeNodes.size() > 0) {
         // Run a for loop that tries to resolve every node in activeNodes
         std::vector<int> removeMe;
         std::vector<Node*> addMe;
         unsigned int i;
+
+        // sort activeNodes by time
+        sort(activeNodes.begin(), activeNodes.end(), [](Node *a, Node *b) {
+            return a->getTime() > b->getTime();
+        });
+
+        // process each nodes
         for(i = 0; i < activeNodes.size(); i++) {
             Node *p = activeNodes[i];
             if(p == NULL) {

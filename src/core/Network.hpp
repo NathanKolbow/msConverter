@@ -29,20 +29,6 @@ class Network {
         bool permuteRandomGamma(double gamma);
         void makeUltrametric(void);
 
-
-    protected:
-        Network(void) { }
-        Node* root = NULL;
-        std::vector<Node*> nodes;
-        void writeNetwork(Node *p, std::stringstream& ss, bool, bool);
-        void writeNetwork(Node *p, std::stringstream *ss, std::vector<std::stringstream*>& allStreams, bool minorHybrid);
-        bool isHybridName(std::string);
-        int hybridNameIndex(std::string val, std::vector<std::string> list);
-        int activeNodesIdx(Node *p, std::vector<Node*>);
-        int getLength(std::string);
-        int getTotalExtantTaxa(void);
-        std::string getNewick(bool);
-
     private:
         void buildFromNewick(std::string newickStr);
         void buildFromMS(std::vector<MSEvent*> events);
@@ -58,6 +44,18 @@ class Network {
         std::vector<MSEvent*> toms(double);
         void warnBranchLength(bool, bool&);
         void warnHybridGamma(bool justReadHybrid, bool &warnedBlankOrZeroGamma, std::string nodeName);
+
+        Network(void) { }
+        Node* root = NULL;
+        std::vector<Node*> nodes;
+        void writeNetwork(Node *p, std::stringstream& ss, bool, bool);
+        void writeNetwork(Node *p, std::stringstream *ss, std::vector<std::stringstream*>& allStreams, bool minorHybrid);
+        bool isHybridName(std::string);
+        int hybridNameIndex(std::string val, std::vector<std::string> list);
+        int activeNodesIdx(Node *p, std::vector<Node*>);
+        int getLength(std::string);
+        int getTotalExtantTaxa(void);
+        std::string getNewick(bool);
 };
 
 bool isomorphic(Network, Network);
@@ -65,5 +63,6 @@ bool isomorphicNewick(std::string, std::string);
 bool isomorphicRecur(Node*, Node*);
 bool nodeEquivBranches(Node *p1, Node *p2);
 void disableNetworkWarnings(void);
+inline bool tryAddNodes(MSEvent *e, std::vector<int> &taxa_at_time);
 
 #endif

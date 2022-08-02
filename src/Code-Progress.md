@@ -8,4 +8,4 @@
 
 ### Known bugs:
 
-1. Networks with times that tie have the potential to spit out nonsense when using `SimSuite::newickToMS` (especially star phylogenies); tying times should be disallowed.
+1. Networks with times that tie have the potential to spit out nonsense (especially star phylogenies)
