@@ -62,14 +62,6 @@ bool Network::permuteRandomGamma(double change) {
 }
 
 bool isomorphic(Network net1, Network net2) {
-    std::cerr << "net1 leaf times:" << std::endl;
-    for(Node *p : net1.getLeaves())
-        std::cerr << "\t" << p->getName() << ": " << p->getTime() << std::endl;
-
-    std::cerr << "\nnet2 leaf times:" << std::endl;
-    for(Node *p : net2.getLeaves())
-        std::cerr << "\t" << p->getName() << ": " << p->getTime() << std::endl;
-
     // Find the root of each network
     Node *root1 = net1.getNodes()[0];
     while(root1->getMajorAnc() != NULL)

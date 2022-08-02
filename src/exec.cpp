@@ -1,6 +1,7 @@
 #include <boost/program_options.hpp>
 
 #include "SimSuite.hpp"
+#include "tests/test_helpers.hpp"
 
 #include <iostream>
 #include <ostream>
@@ -20,6 +21,7 @@ int main(int argc, char *argv[]) {
         ("output,o,out", po::value<std::string>(), "output file location")
         ("quiet,no_warn", "do not output warning messages to standard error output")
         ("args_only", "only output the -ej and -es arguments for the ms command, NOT a fully formed ms command")
+        ("safe,safe_mode", "converts all ms back to Newick to ensure accuracy before giving the ms to the user")
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -46,10 +48,16 @@ int main(int argc, char *argv[]) {
     // Read and convert the Newick
     std::vector<std::string> msCmds;
     if(vm.count("file")) {
-        msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>());
+        if(vm.count("safe"))
+            msCmds = SimSuite::newickFileToMSSafe(vm["file"].as<std::string>());
+        else
+            msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>());
     }
     if(vm.count("newick")) {
-        msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>()));
+        if(vm.count("safe"))
+            msCmds.push_back(SimSuite::newickToMSSafe(vm["newick"].as<std::string>()));
+        else
+            msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>()));
     }
 
     // Write the ms arguments
@@ -82,21 +90,4 @@ int main(int argc, char *argv[]) {
         }
         return 0;
     }
-}
-
-inline void argsOnly(std::string &msCmd) {
-    int _dash = 0;
-    int dashCount = 0;
-    while(dashCount < 3 && msCmd[_dash] != '\0') {
-        if(msCmd[_dash] == '-')
-            dashCount++;
-        _dash += 1;
-    }
-
-    if(msCmd[_dash] == '\0') {
-        std::cerr << "FATAL ERROR: Looks like some string memory got mixed up somewhere along the line..." << std::endl;
-        exit(-1);
-    }
-
-    msCmd.erase(0, _dash-1);
 }

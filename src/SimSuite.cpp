@@ -20,11 +20,13 @@
 
 #include "core/Network.hpp"
 #include "core/MSEvents.hpp"
+#include "tests/test_helpers.hpp"
 
 #include <iostream>
 #include <string>
 #include <iomanip>
 #include <fstream>
+#include <stdexcept>
 
 namespace SimSuite {
     std::string newickToMS(std::string newickStr) {
@@ -52,6 +54,44 @@ namespace SimSuite {
         while(std::getline(ifs, line))
             msStrs.push_back(newickToMS(line));
         
+        return msStrs;
+    }
+
+    std::string newickToMSSafe(std::string newickStr) {
+        std::string msCmd = newickToMS(newickStr);
+        std::string msArgs = std::string(msCmd);
+        argsOnly(msArgs);
+        Network newickNet(newickStr, "newick");
+        Network msNet(msArgs, "ms");
+
+        if(!isomorphic(newickNet, msNet))
+            throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+        
+        return msCmd;
+    }
+
+    std::vector<std::string> newickFileToMSSafe(std::string location) {
+        std::ifstream ifs(location);
+        if(!ifs.is_open()) {
+            std::cerr << "ERROR: Failed to open file " << location << "; quitting." << std::endl;
+            exit(-1);
+        }
+
+        std::vector<std::string> msStrs;
+        std::string line;
+
+        while(std::getline(ifs, line)) {
+            std::string msCmd = newickToMS(line);
+            std::string msArgs = std::string(msCmd);
+            argsOnly(msArgs);
+
+            Network newickNet(line, "newick");
+            Network msNet(msArgs, "ms");
+
+            if(!isomorphic(newickNet, msNet))
+                throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickFileToMSSafe]");
+            msStrs.push_back(msCmd);
+        }
         return msStrs;
     }
 

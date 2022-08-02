@@ -15,6 +15,7 @@ find_package(Boost 1.60.0 COMPONENTS program_options unit_test_framework REQUIRE
 
 # Build the SimSuite library
 add_library(simsuite OBJECT SimSuite.cpp)
+set_property(TARGET simsuite PROPERTY CXX_STANDARD 17)
 target_include_directories(simsuite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(simsuite core)
 
