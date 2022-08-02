@@ -1338,6 +1338,8 @@ std::vector<MSEvent*> Network::toms(double endTime) {
         });
 
         // process each nodes
+        // TODO: in order to process EVERYTHING in time order, probably need to process just the next
+        // entry in activeNodes one at a time, re-sorting every single time, instead of going in a for loop like this
         for(i = 0; i < activeNodes.size(); i++) {
             Node *p = activeNodes[i];
             if(p == NULL) {
