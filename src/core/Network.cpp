@@ -21,6 +21,7 @@
 #include "Node.hpp"
 #include "Network.hpp"
 #include "MSEvents.hpp"
+#include "core_helpers.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -134,20 +135,41 @@ bool nodeEquivBranches(Node *p1, Node *p2) {
         // Neither are hybrids
         return 
             // compare incoming branch lengths
-            p1->getMajorBranchLength() == p2->getMajorBranchLength() &&
+            equalDoubles(p1->getMajorBranchLength(), p2->getMajorBranchLength()) &&
             // compare outgoing gammas
-            ((p1->getGammaLft() == p2->getGammaLft() && p1->getGammaRht() == p2->getGammaRht()) || (p1->getGammaLft() == p2->getGammaRht() && p1->getGammaRht() == p2->getGammaLft()));
+            ((equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) || 
+             (equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())));
     } else {
         // Both are hybrids
         // if NOT(each of the branches of p1 matches one of p2's), return false.
-        if(!((p1->getMajorBranchLength() == p2->getMajorBranchLength() && p1->getMinorBranchLength() == p2->getMinorBranchLength()) ||
-           (p1->getMajorBranchLength() == p2->getMinorBranchLength() && p1->getMinorBranchLength() == p2->getMajorBranchLength())))
+        if(!((equalDoubles(p1->getMajorBranchLength(), p2->getMajorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMinorBranchLength())) ||
+           (equalDoubles(p1->getMajorBranchLength(), p2->getMinorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMajorBranchLength()))))
            return false;
 
         // if neither pairing of outgoing gamma values matches, return false.
-        if(!(p1->getGammaLft() == p2->getGammaLft() && p1->getGammaRht() == p2->getGammaRht()) && !(p1->getGammaLft() == p2->getGammaRht() && p1->getGammaRht() == p2->getGammaLft()))
+        if(!(equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) && 
+           !(equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())))
             return false;
     }
+
+    // if(p1->getMinorAnc() == p2->getMinorAnc()) {
+    //     // Neither are hybrids
+    //     return 
+    //         // compare incoming branch lengths
+    //         p1->getMajorBranchLength() == p2->getMajorBranchLength() &&
+    //         // compare outgoing gammas
+    //         ((equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) || (equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())));
+    // } else {
+    //     // Both are hybrids
+    //     // if NOT(each of the branches of p1 matches one of p2's), return false.
+    //     if(!((equalDoubles(p1->getMajorBranchLength(), p2->getMajorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMinorBranchLength())) ||
+    //        (equalDoubles(p1->getMajorBranchLength(), p2->getMinorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMajorBranchLength()))))
+    //        return false;
+
+    //     // if neither pairing of outgoing gamma values matches, return false.
+    //     if(!(equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) && !(equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())))
+    //         return false;
+    // }
     return true;
 }
 
@@ -737,7 +759,7 @@ std::string Network::getMSString(void) {
             if(endTime != -1) {
                 // Floating point issues...
                 endTime = std::max(endTime, p->getTime());
-                if(std::abs(p->getTime() - endTime) > 1e-9)
+                if(!equalDoubles(p->getTime(), endTime))
                     ultrametric = false;
             } else {
                 endTime = p->getTime();
@@ -992,7 +1014,7 @@ void Network::setTimeRecur(Node *p) {
     double timeFollowingMin = (minAnc == NULL) ? timeFollowingMaj : minAnc->getTime() + p->getMinorBranchLength();
 
 
-    if(std::abs(timeFollowingMaj - timeFollowingMin) > 1e-9) {
+    if(!equalDoubles(timeFollowingMaj, timeFollowingMin)) {
         std::cerr << "ERROR: Branch lengths leading to node " << p->getName() << " disagree! Lengths are " << timeFollowingMaj << " and " << timeFollowingMin << "." << std::endl;
         std::cerr << "\tParents are " << majAnc->getName() << " and " << ((minAnc == NULL)?"":minAnc->getName()) << " respectively." << std::endl;
         std::cerr << "\t" << p->getMajorBranchLength() << ", " << p->getMinorBranchLength() << std::endl;
