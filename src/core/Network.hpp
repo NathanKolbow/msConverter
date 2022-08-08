@@ -23,7 +23,7 @@ class Network {
         Network(std::vector<MSEvent*> events);
         std::string getMSString(void);
         void prettyPrint(std::ostream &str);
-        inline std::vector<Node*> getLeaves();
+        std::vector<Node*> getLeaves();
 
         std::vector<Node*> getNodes(void) { return nodes; }
         bool permuteRandomGamma(double gamma);

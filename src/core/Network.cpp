@@ -720,7 +720,7 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
     return events;
 }
 
-inline std::vector<Node*> Network::getLeaves(void) {
+std::vector<Node*> Network::getLeaves(void) {
     std::vector<Node*> leaves;
     for(Node *p : nodes)
         if(p->getLft() == p->getRht())
