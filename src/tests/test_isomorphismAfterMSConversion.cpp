@@ -41,6 +41,8 @@ BOOST_AUTO_TEST_CASE(test1) {
         
         std::string convNewick = ss::msToNewick(msArgs);
         
+        std::cerr << "Testing " << newick << " vs. " << convNewick << std::endl;
+
         BOOST_CHECK(isomorphicNewick(newick, convNewick));
     }
 }
