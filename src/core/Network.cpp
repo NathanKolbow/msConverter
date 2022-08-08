@@ -62,7 +62,7 @@ bool Network::permuteRandomGamma(double change) {
     return false;
 }
 
-bool isomorphic(Network net1, Network net2) {
+bool isomorphic(Network &net1, Network &net2) {
     // Find the root of each network
     Node *root1 = net1.getNodes()[0];
     while(root1->getMajorAnc() != NULL)
@@ -174,7 +174,9 @@ bool nodeEquivBranches(Node *p1, Node *p2) {
 }
 
 bool isomorphicNewick(std::string newick1, std::string newick2) {
-    return isomorphic(Network(newick1, "newick"), Network(newick2, "newick"));
+    Network n1(newick1, "newick");
+    Network n2(newick2, "newick");
+    return isomorphic(n1, n2);
 }
 
 // returns true if none of the taxa involved in e are contained in taxa_at_time

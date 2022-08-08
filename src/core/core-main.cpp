@@ -20,23 +20,26 @@
 
 #include "Network.hpp"
 #include "MSEvents.hpp"
+#include "../SimSuite.hpp"
+#include "../tests/test_helpers.hpp"
+
 #include <iostream>
 
+namespace ss = SimSuite;
+
 int main(int narg, char *argv[]) {
-    // Check for Newick string equivalence
-    std::string n1 = std::string("((A:0.6,(B:0.5,#H1:0.1::0.6):0.1):0.2,((C:0.4)#H1:0.3::0.4,D:0.7):0.1);");
-    std::string n2 = std::string("((A:0.6,(B:0.5,(C:0.4)#H1:0.1::0.6):0.1):0.2,(#H1:0.3::0.4,D:0.7):0.1);");
-    std::string n3 = std::string("((1:0.1,((2:0.2,(3:0.3,(4:0.4)Y#H1:0.5)g:0.6)e:0.7,(((Y#H1:0.8,5:0.9)h:1.0,6:1.1)f:1.2)X#H2:1.3)c:1.4)a:1.5,((X#H2:1.6,7:1.7)d:1.8,8:1.9)b:2.0)r;");
+    std::string fifty = "(t50:18.0,(t26:17.0,(((t33:1.0,t46:1.0):10.0,#H51:1.0::0.17):5.0,(t10:15.0,((t11:1.0,t43:1.0):13.0,((( ((((t1:3.0,(t48:2.0,(t27:1.0)#H59:1.0::0.746):1.0):1.0,t17:4.0):1.0,(((t45:2.0,(t39:1.0)#H61:1.0::0.7 63):1.0,t28:3.0):1.0,#H61:3.0::0.237):1.0):1.0,((t38:1.0,t21:1.0):1.0,#H59:1.0::0.254):4.0):5.0,((((( t16:6.0,(((t5:3.0,(t19:2.0,(t42:1.0)#H65:1.0::0.542):1.0):1.0,#H65:3.0::0.458):1.0)#H63:1.0::0.758 ):1.0,t44:7.0):1.0,((t2:1.0,t15:1.0):5.0,#H63:1.0::0.242):2.0):1.0,((t18:4.0,(t20:3.0,#H67:1.0::0.27) :1.0):1.0,((t3:1.0,t31:1.0):1.0)#H67:3.0::0.73):4.0):1.0)#H51:1.0::0.83):1.0,((t7:2.0,(t37:1.0)#H53: 1.0::0.631):1.0,(t24:2.0,#H53:1.0::0.369):1.0):9.0):1.0,(((t23:8.0,(t13:7.0,#H55:1.0::0.105):1.0):1. 0,((((t40:1.0,t34:1.0):3.0,(((t12:1.0,t14:1.0):1.0,t30:2.0):1.0)#H69:1.0::0.504):1.0,((t32:2.0,(t41:1. 0,t4:1.0):1.0):2.0,#H69:1.0::0.496):1.0):1.0,t25:6.0):3.0):2.0,(t9:10.0,(t35:9.0,(t29:8.0,(t47:7.0,(((( t36:1.0,t22:1.0):3.0,(t6:3.0,(t8:2.0,#H57:1.0::0.374):1.0):1.0):1.0,(t49:1.0)#H57:4.0::0.626):1.0)# H55:1.0::0.895):1.0):1.0):1.0):1.0):2.0):1.0):1.0):1.0):1.0):1.0);";
+    
+    Network newickNet(fifty, "newick");
 
-    std::cout << "Building net1" << std::endl;
-    Network net1(n1, "newick");
-    std::cout << "Building net2" << std::endl;
-    Network net2(n2, "newick");
+    std::string msArgs = ss::newickToMS(fifty);
+    argsOnly(msArgs);
 
-    // std::vector<std::string> newicks = net3.getRandomNewickRepresentations(5);
-    // std::cout << "\n\nRandom equivalent Newick representations:\n";
-    // for(std::string str : newicks)
-    //     std::cout << str << std::endl;
+    Network msNet(msArgs, "ms");
+
+    bool iso = isomorphic(newickNet, msNet);
+
+    std::cerr << "isomorphic(newickNet, msNet): " << (iso ? "true" : "false") << std::endl;
 
     return 0;
 }
