@@ -22,18 +22,15 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Download and install Boost
-      uses: MarkusJx/install-boost@v2.3.0
-      with:
-        boost_version: 1.79.0
-        platform_version: 10.15
-        boost_install_dir: ${{github.workspace}}/
-        toolset: clang
+      run: |
+        brew update
+        brew install boost
+        brew upgrade
 
     - name: Configure CMake
     #   # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
     #   # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-             -DBOOST_ROOT=${{github.workspace}}/boost/boost
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       # Build your program with the given configuration
