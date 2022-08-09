@@ -21,6 +21,7 @@
 #include "Network.hpp"
 #include "MSEvents.hpp"
 #include "../SimSuite.hpp"
+#include "Node.hpp"
 #include "../tests/test_helpers.hpp"
 
 #include <iostream>
@@ -35,9 +36,15 @@ int main(int narg, char *argv[]) {
     std::string msArgs = ss::newickToMS(fifty);
     argsOnly(msArgs);
 
+    std::cerr << msArgs << std::endl;
+
     Network msNet(msArgs, "ms");
 
     bool iso = isomorphic(newickNet, msNet);
+
+    // std::cerr << std::endl << std::endl;
+    // for(Node *p : msNet.getNodes())
+    //     p->printInfo();
 
     std::cerr << "isomorphic(newickNet, msNet): " << (iso ? "true" : "false") << std::endl;
 

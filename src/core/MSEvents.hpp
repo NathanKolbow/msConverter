@@ -9,12 +9,13 @@ enum MSEventType { split, join };
 class MSEvent {
     public:
         virtual MSEventType getEventType(void) = 0;
+        virtual std::string toString(void) = 0;
         
         double getTime(void) { return time; }
         void setTime(double t) { time = t; }
-        
+
     protected:
-        double time = -1;
+        double time;
 };
 
 class MSJoinEvent:public MSEvent {

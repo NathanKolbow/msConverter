@@ -796,7 +796,8 @@ std::string Network::getMSString(void) {
     std::string str = ss.str() + " ";
 
     for(MSEvent* e : events) {
-        str += ((e->getEventType() == join) ? ((MSJoinEvent*)e)->toString() : ((MSSplitEvent*)e)->toString()) + " ";
+        str += e->toString() + " ";
+        // str += ((e->getEventType() == join) ? ((MSJoinEvent*)e)->toString() : ((MSSplitEvent*)e)->toString()) + " ";
     }
 
     if(!ultrametric) {
@@ -1353,115 +1354,90 @@ std::vector<MSEvent*> Network::toms(double endTime) {
             return a->getTime() > b->getTime();
         });
 
-        // process each nodes
-        // TODO: in order to process EVERYTHING in time order, probably need to process just the next
-        // entry in activeNodes one at a time, re-sorting every single time, instead of going in a for loop like this
-        for(i = 0; i < activeNodes.size(); i++) {
-            Node *p = activeNodes[i];
-            if(p == NULL) {
-                std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
-                throw std::invalid_argument("active node is blank");
+        //---- // process each nodes
+        //---- // TODO: in order to process EVERYTHING in time order, probably need to process just the next
+        //---- // entry in activeNodes one at a time, re-sorting every single time, instead of going in a for loop like this
+        //---- for(i = 0; i < activeNodes.size(); i++) {
+        Node *p = activeNodes[0];
+        if(p == NULL) {
+            std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
+            throw std::invalid_argument("active node is blank");
+        }
+
+        Node *majAnc = p->getMajorAnc();
+        Node *minAnc = p->getMinorAnc();
+        // a. if only one ancestor (this will only ever take place when there is a MajorAnc and NOT a MinorAnc)
+        if(majAnc != NULL && minAnc == NULL) {
+            // I. if the anc is NOT named: take the anc
+            if(majAnc->getHiddenID() == -1) {
+                majAnc->setHiddenID(p->getHiddenID());
+
+                addMe.push_back(majAnc);
             }
-
-            Node *majAnc = p->getMajorAnc();
-            Node *minAnc = p->getMinorAnc();
-            // a. if only one ancestor (this will only ever take place when there is a MajorAnc and NOT a MinorAnc)
-            if(majAnc != NULL && minAnc == NULL) {
-                // I. if the anc is NOT named: take the anc
-                if(majAnc->getHiddenID() == -1) {
-                    majAnc->setHiddenID(p->getHiddenID());
-
-                    // Remove p and add majAnc
-                    removeMe.push_back(i);
-                    addMe.push_back(majAnc);
-                }
-                // II. if anc named: coalesce *INTO* the ancestor
-                else {
-                    events.push_back(new MSJoinEvent(majAnc->getTime(), p->getHiddenID(), majAnc->getHiddenID()));
-
-                    // Remove p; majAnc is already named, so if it still has more potential things to do, it should be
-                    // in activeNodes already. So we don't need to touch it.
-                    removeMe.push_back(i);
-                }
-            }
-            // b. if we have two ancestors
-            else if(majAnc != NULL && minAnc != NULL) {
-                // I. both ancs unnamed: split, give MajorAnc our name and give MinorAnc a new name
-                if(majAnc->getHiddenID() == -1 && minAnc->getHiddenID() == -1) {
-                    // p is coalescing into majAnc, so gamma on this split comes from majAnc
-                    double gamma = (majAnc->getLft() == p) ? majAnc->getGammaLft() : majAnc->getGammaRht();
-
-                    // Split
-                    events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), gamma));
-
-                    // Give MajorAnc our name and add MajorAnc to activeNodes
-                    majAnc->setHiddenID(p->getHiddenID());
-                    addMe.push_back(majAnc);
-
-                    // Give MinorAnc its new name and add it to activeNodes
-                    minAnc->setHiddenID(popnCounter++);
-                    addMe.push_back(minAnc);
-
-                    // Remove p from activeNodes
-                    removeMe.push_back(i);
-                }
-                // II. if only one anc is named: split, give the blank anc a new name, and then join with the named anc
-                else if((majAnc->getHiddenID() == -1) != (minAnc->getHiddenID() == -1)) {
-                    Node *unnamedAnc = (majAnc->getHiddenID() == -1) ? majAnc : minAnc;
-                    Node *namedAnc = (unnamedAnc == majAnc) ? minAnc : majAnc;
-
-                    // p is coalescing into unnamedAnc, so gamma comes from unnamedAnc 
-                    double gamma = (unnamedAnc->getLft() == p) ? unnamedAnc->getGammaLft() : unnamedAnc->getGammaRht();
-
-                    // Split; 1-gamma because gamma comes from unnamedAnc, which we are merging into.
-                    //        however, namedAnc is the only anc we are able to generate a join event for
-                    //        right now (b/c it's the only named anc), so this split event needs to be 1-gamma
-                    events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), 1-gamma));
-
-                    // Give the blank anc a new name and add it to the queue
-                    unnamedAnc->setHiddenID(popnCounter++);
-                    addMe.push_back(unnamedAnc);
-
-                    // Join
-                    events.push_back(new MSJoinEvent(namedAnc->getTime(), p->getHiddenID(), namedAnc->getHiddenID()));
-
-                    // Remove p
-                    removeMe.push_back(i);
-                }
-                // III. if both ancs are named, split, then join both the new lineages with the existing ones
-                else {
-                    // p is coalescing into majAnc, so gamma comes from majAnc
-                    double gamma = (majAnc->getLft() == p) ? majAnc->getGammaLft() : majAnc->getGammaRht();
-
-                    // Split
-                    events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), gamma));
-
-                    // Join left
-                    events.push_back(new MSJoinEvent(majAnc->getTime(), p->getHiddenID(), majAnc->getHiddenID()));
-
-                    // Join right
-                    events.push_back(new MSJoinEvent(minAnc->getTime(), popnCounter++, minAnc->getHiddenID()));
-
-                    // Remove p
-                    removeMe.push_back(i);
-                }
-            }
-            // c. if we don't have ancestors, we are root, so just remove us
+            // II. if anc named: coalesce *INTO* the ancestor
             else {
-                removeMe.push_back(i);
+                events.push_back(new MSJoinEvent(majAnc->getTime(), p->getHiddenID(), majAnc->getHiddenID()));
             }
         }
+        // b. if we have two ancestors
+        else if(majAnc != NULL && minAnc != NULL) {
+            // I. both ancs unnamed: split, give MajorAnc our name and give MinorAnc a new name
+            if(majAnc->getHiddenID() == -1 && minAnc->getHiddenID() == -1) {
+                // p is coalescing into majAnc, so gamma on this split comes from majAnc
+                double gamma = (majAnc->getLft() == p) ? majAnc->getGammaLft() : majAnc->getGammaRht();
 
+                // Split
+                events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), gamma));
 
-        // Reverse sort the list so that we don't mess up indices as we go.
-        std::sort(removeMe.begin(), removeMe.end(),
-            [](int a, int b) {
-                return(a > b);
+                // Give MajorAnc our name and add MajorAnc to activeNodes
+                majAnc->setHiddenID(p->getHiddenID());
+                addMe.push_back(majAnc);
+
+                // Give MinorAnc its new name and add it to activeNodes
+                minAnc->setHiddenID(popnCounter++);
+                addMe.push_back(minAnc);
             }
-        );
-        for(int idx : removeMe) {
-            activeNodes.erase(std::next(activeNodes.begin(), idx));
+            // II. if only one anc is named: split, give the blank anc a new name, and then join with the named anc
+            else if((majAnc->getHiddenID() == -1) != (minAnc->getHiddenID() == -1)) {
+                Node *unnamedAnc = (majAnc->getHiddenID() == -1) ? majAnc : minAnc;
+                Node *namedAnc = (unnamedAnc == majAnc) ? minAnc : majAnc;
+
+                // p is coalescing into unnamedAnc, so gamma comes from unnamedAnc 
+                double gamma = (unnamedAnc->getLft() == p) ? unnamedAnc->getGammaLft() : unnamedAnc->getGammaRht();
+
+                // Split; 1-gamma because gamma comes from unnamedAnc, which we are merging into.
+                //        however, namedAnc is the only anc we are able to generate a join event for
+                //        right now (b/c it's the only named anc), so this split event needs to be 1-gamma
+                events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), 1-gamma));
+
+                // Give the blank anc a new name and add it to the queue
+                unnamedAnc->setHiddenID(popnCounter++);
+                addMe.push_back(unnamedAnc);
+
+                // Join
+                events.push_back(new MSJoinEvent(namedAnc->getTime(), p->getHiddenID(), namedAnc->getHiddenID()));
+            }
+            // III. if both ancs are named, split, then join both the new lineages with the existing ones
+            else {
+                // p is coalescing into majAnc, so gamma comes from majAnc
+                double gamma = (majAnc->getLft() == p) ? majAnc->getGammaLft() : majAnc->getGammaRht();
+
+                // Split
+                events.push_back(new MSSplitEvent(p->getTime(), p->getHiddenID(), gamma));
+
+                // Join left
+                events.push_back(new MSJoinEvent(majAnc->getTime(), p->getHiddenID(), majAnc->getHiddenID()));
+
+                // Join right
+                events.push_back(new MSJoinEvent(minAnc->getTime(), popnCounter++, minAnc->getHiddenID()));
+            }
         }
+        // c. if we don't have ancestors, we are root, so do nothing and allow ourselves to be removed
+        //---- }
+
+        // Remove the item that we just processed
+        activeNodes.erase(std::next(activeNodes.begin(), 0));
+
         // Add the addMe nodes to activeNodes
         for(Node *node : addMe) {
             activeNodes.push_back(node);
@@ -1472,9 +1448,11 @@ std::vector<MSEvent*> Network::toms(double endTime) {
     for(MSEvent *e : events)
         e->setTime(endTime - e->getTime());
 
-    sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
+    // having lots of issues with the sort fxn, so we're gonna do this in two steps...
+    std::sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
         return a->getTime() < b->getTime();
     });
+
     return events;
 }
 
