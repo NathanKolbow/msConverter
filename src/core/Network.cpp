@@ -1449,7 +1449,17 @@ std::vector<MSEvent*> Network::toms(double endTime) {
 
     // having lots of issues with the sort fxn, so we're gonna do this in two steps...
     std::sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
-        return a->getTime() < b->getTime();
+        if(a->getTime() != b->getTime()) return a->getTime() < b->getTime();
+        else if(a->getEventType() != b->getEventType()) {
+            if(a->getEventType() == join) return true;
+            return false;
+        } else if(a->getEventType() == join) {
+            if(((MSJoinEvent*)a)->getMajorTaxa() == ((MSJoinEvent*)b)->getMajorTaxa())
+                return ((MSJoinEvent*)a)->getMinorTaxa() < ((MSJoinEvent*)b)->getMinorTaxa();
+            return ((MSJoinEvent*)a)->getMajorTaxa() < ((MSJoinEvent*)b)->getMajorTaxa();
+        } else {
+            return ((MSSplitEvent*)a)->getTaxa() < ((MSSplitEvent*)b)->getTaxa();
+        }
     });
 
     return events;
