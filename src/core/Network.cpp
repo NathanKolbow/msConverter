@@ -1343,13 +1343,13 @@ std::vector<MSEvent*> Network::toms(double endTime) {
      * If the node has one ancestor, this is a coalescence event. If this node's sister is not named, do not perform this
      * coalsecence yet. Wait for the node to be named.
      */
+    std::vector<Node*> addMe;
     while(activeNodes.size() > 0) {
         // Run a for loop that tries to resolve every node in activeNodes
-        std::vector<int> removeMe;
-        std::vector<Node*> addMe;
+        addMe.clear();
 
         // sort activeNodes by time
-        sort(activeNodes.begin(), activeNodes.end(), [](Node *a, Node *b) {
+        std::stable_sort(activeNodes.begin(), activeNodes.end(), [](Node *a, Node *b) {
             return a->getTime() > b->getTime();
         });
 
@@ -1447,18 +1447,10 @@ std::vector<MSEvent*> Network::toms(double endTime) {
     for(MSEvent *e : events)
         e->setTime(endTime - e->getTime());
 
-    std::cerr << "BEFORE SORTING:" << std::endl;
-    for(MSEvent *e : events)
-        std::cerr << "\t" << e->toString() << std::endl;
-
     // having lots of issues with the sort fxn, so we're gonna do this in two steps...
     std::sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
         return a->getTime() < b->getTime();
     });
-
-    std::cerr << "AFTER SORTING:" << std::endl;
-    for(MSEvent *e : events)
-        std::cerr << "\t" << e->toString() << std::endl;
 
     return events;
 }
