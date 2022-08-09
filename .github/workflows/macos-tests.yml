@@ -35,7 +35,9 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
              -DBOOST_ROOT=${{github.workspace}}/boost/boost \
              -DBoost_INCLUDE_DIRS=${{github.workspace}}/boost/boost/include \
-             -DBoost_LIBRARY_DIRS=${{github.workspace}}/boost/boost/lib
+             -DBoost_LIBRARY_DIRS=${{github.workspace}}/boost/boost/lib \
+             -DBoost_INCLUDEDIR=${{github.workspace}}/boost/boost/include \
+             -DBoost_LIBRARYDIR=${{github.workspace}}/boost/boost/lib
 
     - name: Build
       # Build your program with the given configuration

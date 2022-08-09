@@ -1349,6 +1349,7 @@ std::vector<MSEvent*> Network::toms(double endTime) {
         addMe.clear();
 
         // sort activeNodes by time
+        /// @note the order in which nodes were added to activeNodes is important, so we use `stable_sort` instead of `sort`
         std::stable_sort(activeNodes.begin(), activeNodes.end(), [](Node *a, Node *b) {
             return a->getTime() > b->getTime();
         });
