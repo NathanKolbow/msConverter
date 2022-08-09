@@ -1347,7 +1347,6 @@ std::vector<MSEvent*> Network::toms(double endTime) {
         // Run a for loop that tries to resolve every node in activeNodes
         std::vector<int> removeMe;
         std::vector<Node*> addMe;
-        unsigned int i;
 
         // sort activeNodes by time
         sort(activeNodes.begin(), activeNodes.end(), [](Node *a, Node *b) {
@@ -1448,10 +1447,18 @@ std::vector<MSEvent*> Network::toms(double endTime) {
     for(MSEvent *e : events)
         e->setTime(endTime - e->getTime());
 
+    std::cerr << "BEFORE SORTING:" << std::endl;
+    for(MSEvent *e : events)
+        std::cerr << "\t" << e->toString() << std::endl;
+
     // having lots of issues with the sort fxn, so we're gonna do this in two steps...
     std::sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
         return a->getTime() < b->getTime();
     });
+
+    std::cerr << "AFTER SORTING:" << std::endl;
+    for(MSEvent *e : events)
+        std::cerr << "\t" << e->toString() << std::endl;
 
     return events;
 }
