@@ -21,8 +21,7 @@ class Network {
         int totalNodes(void) { return nodes.size(); }
         Network(std::string str, std::string strFormat);
         Network(std::vector<MSEvent*> events);
-        std::string getMSString(void);
-        std::string getMSString(int ntrees);
+        std::string getMSString(int ntrees, bool coalescent2N);
         void prettyPrint(std::ostream &str);
         std::vector<Node*> getLeaves();
 

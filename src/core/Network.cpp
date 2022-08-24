@@ -745,11 +745,7 @@ void Network::makeUltrametric(void) {
     }
 }
 
-std::string Network::getMSString(void) {
-    return getMSString(1);
-}
-
-std::string Network::getMSString(int ntrees) {
+std::string Network::getMSString(int ntrees, bool coalescent2N) {
     // ntrees must be at least 1
     if(ntrees < 1) {
         std::cerr << "ERROR: ntrees must be >= 1; returning empty string." << std::endl;
@@ -806,8 +802,11 @@ std::string Network::getMSString(int ntrees) {
     std::string str = ss.str() + " ";
 
     for(MSEvent* e : events) {
+        // ms uses 4N pop'n coalescent units by default, so this allows us to change to 2N units
+        if(coalescent2N)
+            e->setTime(e->getTime() / 2);
+        
         str += e->toString() + " ";
-        // str += ((e->getEventType() == join) ? ((MSJoinEvent*)e)->toString() : ((MSSplitEvent*)e)->toString()) + " ";
     }
 
     if(!ultrametric) {

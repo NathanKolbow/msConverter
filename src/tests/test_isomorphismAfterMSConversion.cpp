@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test1) {
 
     // convert the newicks to ms, then back to newick
     for(std::string newick : newicks) {
-        std::string msArgs = ss::newickToMS(newick);
+        std::string msArgs = ss::newickToMS(newick, 1, false);
         argsOnly(msArgs);
         
         std::string convNewick = ss::msToNewick(msArgs);

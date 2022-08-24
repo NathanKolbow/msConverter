@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
         ("args_only", "only output the -ej and -es arguments for the ms command, NOT a fully formed ms command")
         ("safe,safe_mode", "converts all ms back to Newick to ensure accuracy before giving the ms to the user")
         ("n,ntrees", po::value<unsigned int>(), "number of trees generated in the ms command")
+        ("4N,4n", "tells the converter to use ms's default 4N generation coalescent model instead of the standard 2N generation model")
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -47,25 +48,29 @@ int main(int argc, char *argv[]) {
     }
 
     // specify the number of trees generated per ms command
-    unsigned int ntrees;
+    unsigned int ntrees = 1;
     if(vm.count("n"))
         ntrees = vm["n"].as<unsigned int>();
-    else
-        ntrees = 1;
+
+    // specify whether 2N coalescent units or 4N should be used (defaults to 2N b/c that is the common use case, but `ms` defaults to 4N)
+    bool coalescent2N = true;
+    if(vm.count("4N"))
+        coalescent2N = false;
+
 
     // Read and convert the Newick
     std::vector<std::string> msCmds;
     if(vm.count("file")) {
         if(vm.count("safe"))
-            msCmds = SimSuite::newickFileToMSSafe(vm["file"].as<std::string>(), ntrees);
+            msCmds = SimSuite::newickFileToMSSafe(vm["file"].as<std::string>(), ntrees, coalescent2N);
         else
-            msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>(), ntrees);
+            msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>(), ntrees, coalescent2N);
     }
     if(vm.count("newick")) {
         if(vm.count("safe"))
-            msCmds.push_back(SimSuite::newickToMSSafe(vm["newick"].as<std::string>(), ntrees));
+            msCmds.push_back(SimSuite::newickToMSSafe(vm["newick"].as<std::string>(), ntrees, coalescent2N));
         else
-            msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>(), ntrees));
+            msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>(), ntrees, coalescent2N));
     }
 
     // Write the ms arguments
