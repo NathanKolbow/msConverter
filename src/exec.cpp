@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
         ("quiet,no_warn", "do not output warning messages to standard error output")
         ("args_only", "only output the -ej and -es arguments for the ms command, NOT a fully formed ms command")
         ("safe,safe_mode", "converts all ms back to Newick to ensure accuracy before giving the ms to the user")
+        ("n,ntrees", po::value<unsigned int>(), "number of trees generated in the ms command")
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -45,19 +46,26 @@ int main(int argc, char *argv[]) {
         SimSuite::disableWarnings();
     }
 
+    // specify the number of trees generated per ms command
+    unsigned int ntrees;
+    if(vm.count("n"))
+        ntrees = vm["n"].as<unsigned int>();
+    else
+        ntrees = 1;
+
     // Read and convert the Newick
     std::vector<std::string> msCmds;
     if(vm.count("file")) {
         if(vm.count("safe"))
-            msCmds = SimSuite::newickFileToMSSafe(vm["file"].as<std::string>());
+            msCmds = SimSuite::newickFileToMSSafe(vm["file"].as<std::string>(), ntrees);
         else
-            msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>());
+            msCmds = SimSuite::newickFileToMS(vm["file"].as<std::string>(), ntrees);
     }
     if(vm.count("newick")) {
         if(vm.count("safe"))
-            msCmds.push_back(SimSuite::newickToMSSafe(vm["newick"].as<std::string>()));
+            msCmds.push_back(SimSuite::newickToMSSafe(vm["newick"].as<std::string>(), ntrees));
         else
-            msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>()));
+            msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>(), ntrees));
     }
 
     // Write the ms arguments

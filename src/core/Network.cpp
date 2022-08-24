@@ -746,6 +746,16 @@ void Network::makeUltrametric(void) {
 }
 
 std::string Network::getMSString(void) {
+    return getMSString(1);
+}
+
+std::string Network::getMSString(int ntrees) {
+    // ntrees must be at least 1
+    if(ntrees < 1) {
+        std::cerr << "ERROR: ntrees must be >= 1; returning empty string." << std::endl;
+        return std::string();
+    }
+
     // Check to make sure the tree is ultrametric
     double endTime = -1;
     bool ultrametric = true;
@@ -789,7 +799,7 @@ std::string Network::getMSString(void) {
 
     std::vector<MSEvent*> events = toms(endTime);
     std::stringstream ss;
-    ss << "ms " << leaves.size() << " " << 1 << " -T -I " << leaves.size();
+    ss << "ms " << leaves.size() << " " << ntrees << " -T -I " << leaves.size();
     for(unsigned int i=0; i < leaves.size(); i++)
         ss << " 1";
 

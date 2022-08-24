@@ -29,11 +29,12 @@
 #include <stdexcept>
 
 namespace SimSuite {
-    std::string newickToMS(std::string newickStr) {
+    std::string newickToMS(std::string newickStr, int ntrees) {
         Network net(newickStr, "newick");
-        std::string msString = net.getMSString();
+        std::string msString = net.getMSString(ntrees);
         return msString;
     }
+    std::string newickToMS(std::string newickStr) { return newickToMS(newickStr, 1); }
 
     std::string msToNewick(std::string msStr) {
         Network net(msStr, "ms");
@@ -41,7 +42,7 @@ namespace SimSuite {
         return newick;
     }
 
-    std::vector<std::string> newickFileToMS(std::string location) {
+    std::vector<std::string> newickFileToMS(std::string location, int ntrees) {
         std::ifstream ifs(location);
         if(!ifs.is_open()) {
             std::cerr << "ERROR: Failed to open file " << location << "; quitting." << std::endl;
@@ -52,13 +53,16 @@ namespace SimSuite {
         std::string line;
 
         while(std::getline(ifs, line))
-            msStrs.push_back(newickToMS(line));
+            msStrs.push_back(newickToMS(line, ntrees));
         
         return msStrs;
     }
+    std::vector<std::string> newickFileToMS(std::string location) {
+        return newickFileToMS(location, 1);
+    }
 
-    std::string newickToMSSafe(std::string newickStr) {
-        std::string msCmd = newickToMS(newickStr);
+    std::string newickToMSSafe(std::string newickStr, int ntrees) {
+        std::string msCmd = newickToMS(newickStr, ntrees);
 
         std::string msArgs = std::string(msCmd);
         argsOnly(msArgs);
@@ -68,8 +72,9 @@ namespace SimSuite {
         
         return msCmd;
     }
+    std::string newickToMSSafe(std::string newickStr) { return newickToMSSafe(newickStr, 1); }
 
-    std::vector<std::string> newickFileToMSSafe(std::string location) {
+    std::vector<std::string> newickFileToMSSafe(std::string location, int ntrees) {
         std::ifstream ifs(location);
         if(!ifs.is_open()) {
             std::cerr << "ERROR: Failed to open file " << location << "; quitting." << std::endl;
@@ -80,7 +85,7 @@ namespace SimSuite {
         std::string line;
 
         while(std::getline(ifs, line)) {
-            std::string msCmd = newickToMS(line);
+            std::string msCmd = newickToMS(line, ntrees);
             std::string msArgs = std::string(msCmd);
             argsOnly(msArgs);
 
@@ -90,6 +95,7 @@ namespace SimSuite {
         }
         return msStrs;
     }
+    std::vector<std::string> newickFileToMSSafe(std::string location) { return newickFileToMSSafe(location, 1); }
 
     std::string msFromUserInputNewick(void) {
         std::string newick;

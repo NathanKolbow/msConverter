@@ -22,6 +22,7 @@ class Network {
         Network(std::string str, std::string strFormat);
         Network(std::vector<MSEvent*> events);
         std::string getMSString(void);
+        std::string getMSString(int ntrees);
         void prettyPrint(std::ostream &str);
         std::vector<Node*> getLeaves();
 

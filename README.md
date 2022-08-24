@@ -42,4 +42,4 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-The executable `ms-converter` will then be located in `build/Release/`
+The executable `ms-converter` will then be located in `build/ms-converter` (`build/Release/ms-converter.exe` on Windows)
