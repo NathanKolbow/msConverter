@@ -5,7 +5,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_DEBUG ON)
 set(Boost_USE_STATIC_LIBS ON)
 
-find_package(Boost 1.60.0 REQUIRED COMPONENTS program_options unit_test_framework filesystem)
+find_package(Boost 1.60.0 REQUIRED COMPONENTS program_options unit_test_framework)
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
