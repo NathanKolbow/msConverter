@@ -15,6 +15,16 @@ This code converts Newick trees/networks into a format accepted by the phylogene
 ./ms-converter --newick="((1:0.1,((2:0.2,(3:0.3,(4:0.4)Y#H1:3.0)g:0.6)e:0.7,(((Y#H1:0.8,5:0.9)h:1.0,6:1.1)f:1.2)X#H2:1.3)c:1.4)a:1.5,((X#H2:0.4,7:1.7)d:1.8,8:1.9)b:2.0)r;"
 ```
 
+The program can also directly run `ms` for you:
+
+```bash
+# Read Newick strings from the file newicks.file (new line deliminated), simulate under each Newick 50 times, and output all of the simulated trees to sim.trees
+./ms-converter newicks.file --run --n 50 --output=sim.trees
+
+# Do the same as above, but output the raw `ms` output to the terminal, not just the simulated trees
+./ms-converter newicks.file --run -n 50 --dirty
+```
+
 ---
 
 ## Present restrictions:
