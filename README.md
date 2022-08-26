@@ -18,11 +18,18 @@ This code converts Newick trees/networks into a format accepted by the phylogene
 The program can also directly run `ms` for you:
 
 ```bash
+## If `ms` is in your system path, all you need to do is add --run
+
 # Read Newick strings from the file newicks.file (new line deliminated), simulate under each Newick 50 times, and output all of the simulated trees to sim.trees
 ./ms-converter newicks.file --run --n 50 --output=sim.trees
 
 # Do the same as above, but output the raw `ms` output to the terminal, not just the simulated trees
 ./ms-converter newicks.file --run -n 50 --dirty
+
+## If `ms` is NOT in your system path, you have to tell the program where it is
+
+# Do as above, but specify the location of `ms` (NOTE: this is the FOLDER CONTAINING ms, not ms itself)
+./ms-converter newicks.file --run -n 50 --dirty --ms_path=/opt/msdir/
 ```
 
 ---
