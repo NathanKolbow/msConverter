@@ -48,7 +48,7 @@ Requirements:
     * MacOSX, homebrew: `brew install boost`, MacPorts: `port install boost`
     * [Windows](https://valelab4.ucsf.edu/svn/3rdpartypublic/boost/more/getting_started/windows.html)
     * Ubuntu: `apt-get install libboost-all-dev`
-* C++ compiler and standard libraries
+* C++ compiler and standard libraries (make sure these are up-to-date if compilation fails)
 
 Once these requirements are fulfilled, compile via the following commands:
 
