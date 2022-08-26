@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <sstream>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 inline std::string getNewickFilePath(void) { 
     return fs::current_path().append("../../../newick-strings.txt").string();
