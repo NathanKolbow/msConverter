@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         #ifndef _WIN32
         #ifndef WIN32
             ("run","after converting from Newick to ms, runs the ms command and sends the output to the temrinal (Unix/Linux ONLY)")
-            ("clean","--run must be specified to use --clean. cleans the output of ms so that only gene trees are displayed (Unix/Linux ONLY)")
+            ("dirty","--run must be specified to use --dirty. provides output *as is* from ms; not cleaned (Unix/Linux ONLY)")
             ("ms_path",po::value<std::string>(),"path to the ms exectuable. this need not be used if the directory is already in the user's path. must be used with --run (Unix/Linux ONLY)")
         #endif
         #endif
@@ -42,8 +42,14 @@ int main(int argc, char *argv[]) {
     // (po::parse_command_line(argc, argv, desc), vm);
     
     if(vm.count("clean") && !vm.count("run")) {
-        std::cout << "--run must be specified in order for --clean to be used." << std::endl;
         std::cout << desc << std::endl;
+        std::cout << std::endl << "--run must be specified in order for --clean to be used." << std::endl;
+        return 0;
+    }
+
+    if(vm.count("args_only") && vm.count("run")) {
+        std::cout << "--run and --args_only cannot be used together." << std::endl;
+        return 0;
     }
 
     if(vm.count("help") || argc == 1) {
@@ -87,29 +93,63 @@ int main(int argc, char *argv[]) {
             msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>(), ntrees, coalescent2N));
     }
 
+    std::vector<std::string> msResults;
     #ifndef _WIN32
     #ifndef WIN32
     // run the ms commands
     if(vm.count("run")) {
         FILE *fpipe;
         
-        std::string cmdAppend = (vm.count("ms_path") ? "" : vm["ms_path"].as<std::string>());
+        std::string cmdAppend = (vm.count("ms_path") ? vm["ms_path"].as<std::string>() : "");
         for(std::string msCmd : msCmds) {
             std::string command = cmdAppend + std::string(msCmd);
-            if(0 == (fpipe = (FILE*)std::popen(command, "r"))) {
+            if(0 == (fpipe = (FILE*)popen(command.c_str(), "r"))) {
                 perror("Failed to execute ms command.");
                 std::cerr << "popen() failed." << std::endl;
                 return -1;
             }
 
-            char line[4096];
-            while(fgets(line, line_size, fpipe))
-                std::cout << line;
+            std::string result;
+            char line[8192];
+            while(fgets(line, 8192, fpipe))
+                result += line;
+            msResults.push_back(result);
         }
             
     }
     #endif
     #endif
+
+    std::vector<std::string> outputs;
+    if(msResults.empty())
+        outputs = msCmds;
+    else {
+        for(std::string result : msResults) {
+            unsigned int _start = 0;
+            unsigned int _end = 0;
+            int newLineCount = 0;
+
+            while(result[_end] != '\0') {
+                if(result[_end] == '\n') {
+                    newLineCount += 1;
+                    
+                    // if we want dirty output, push everything; otherwise, clean it
+                    if(vm.count("dirty")) {
+                        outputs.push_back(result.substr(_start, _end-_start));
+                    } else if( newLineCount != 1 &&      // the command itself is always first; skip it
+                        newLineCount != 2 &&      // the seed always comes second; skip it
+                        _start != _end &&         // skip blank lines
+                        result[_start] != '/'     // skip the "//" lines that are included in the output for...some...reason...
+                      ) 
+                        outputs.push_back(result.substr(_start, _end-_start));
+
+                    _start = _end + 1;
+                }
+
+                _end += 1;
+            }
+        }
+    }
 
     // Write the ms arguments
     if(vm.count("output")) {
@@ -119,7 +159,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        for(std::string line : msCmds) {
+        for(std::string line : outputs) {
             if(vm.count("args_only")) {
                 argsOnly(line);
             }
@@ -132,12 +172,13 @@ int main(int argc, char *argv[]) {
         }
         return 0;
     } else {
-        for(std::string str : msCmds) {
+        // print outputs to terminal
+        for(std::string line : outputs) {
             if(vm.count("args_only")) {
-                argsOnly(str);
+                argsOnly(line);
             }
 
-            std::cout << str << std::endl;
+            std::cout << line << std::endl;
         }
         return 0;
     }
