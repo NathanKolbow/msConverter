@@ -7,6 +7,7 @@
 #include <ostream>
 #include <fstream>
 #include <vector>
+#include <cstdlib>
 
 namespace po = boost::program_options;
 
@@ -24,6 +25,14 @@ int main(int argc, char *argv[]) {
         ("safe,safe_mode", "converts all ms back to Newick to ensure accuracy before giving the ms to the user")
         ("n,ntrees", po::value<unsigned int>(), "number of trees generated in the ms command")
         ("4N,4n", "tells the converter to use ms's default 4N generation coalescent model instead of the standard 2N generation model")
+        
+        #ifndef _WIN32
+        #ifndef WIN32
+            ("run","after converting from Newick to ms, runs the ms command and sends the output to the temrinal (Unix/Linux ONLY)")
+            ("clean","--run must be specified to use --clean. cleans the output of ms so that only gene trees are displayed (Unix/Linux ONLY)")
+            ("ms_path",po::value<std::string>(),"path to the ms exectuable. this need not be used if the directory is already in the user's path. must be used with --run (Unix/Linux ONLY)")
+        #endif
+        #endif
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -32,6 +41,11 @@ int main(int argc, char *argv[]) {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
     // (po::parse_command_line(argc, argv, desc), vm);
     
+    if(vm.count("clean") && !vm.count("run")) {
+        std::cout << "--run must be specified in order for --clean to be used." << std::endl;
+        std::cout << desc << std::endl;
+    }
+
     if(vm.count("help") || argc == 1) {
         std::cout << desc << std::endl;
         return 0;
@@ -72,6 +86,30 @@ int main(int argc, char *argv[]) {
         else
             msCmds.push_back(SimSuite::newickToMS(vm["newick"].as<std::string>(), ntrees, coalescent2N));
     }
+
+    #ifndef _WIN32
+    #ifndef WIN32
+    // run the ms commands
+    if(vm.count("run")) {
+        FILE *fpipe;
+        
+        std::string cmdAppend = (vm.count("ms_path") ? "" : vm["ms_path"].as<std::string>());
+        for(std::string msCmd : msCmds) {
+            std::string command = cmdAppend + std::string(msCmd);
+            if(0 == (fpipe = (FILE*)std::popen(command, "r"))) {
+                perror("Failed to execute ms command.");
+                std::cerr << "popen() failed." << std::endl;
+                return -1;
+            }
+
+            char line[4096];
+            while(fgets(line, line_size, fpipe))
+                std::cout << line;
+        }
+            
+    }
+    #endif
+    #endif
 
     // Write the ms arguments
     if(vm.count("output")) {
