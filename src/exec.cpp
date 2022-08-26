@@ -33,6 +33,11 @@ int main(int argc, char *argv[]) {
             ("ms_path",po::value<std::string>(),"path to the ms exectuable. this need not be used if the directory is already in the user's path. must be used with --run (Unix/Linux ONLY)")
         #endif
         #endif
+        #if defined(_WIN32) || defined(WIN32)
+            ("run","this argument is not availabe on Windows executables; sorry")
+            ("dirty","this argument is not availabe on Windows executables; sorry")
+            ("ms_path","this argument is not availabe on Windows executables; sorry")
+        #endif
     ;
     po::positional_options_description p;
     p.add("file", -1);
@@ -41,6 +46,15 @@ int main(int argc, char *argv[]) {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
     // (po::parse_command_line(argc, argv, desc), vm);
     
+    #if defined(_WIN32) || defined(WIN32)
+    if(vm.count("run")) {
+        std::cerr << "--run is not available on Windows, sorry." << std::endl;
+        return -1;
+    }
+    #endif
+
+    #ifndef _WIN32
+    #ifndef WIN32
     if(vm.count("clean") && !vm.count("run")) {
         std::cout << desc << std::endl;
         std::cout << std::endl << "--run must be specified in order for --clean to be used." << std::endl;
@@ -51,6 +65,8 @@ int main(int argc, char *argv[]) {
         std::cout << "--run and --args_only cannot be used together." << std::endl;
         return 0;
     }
+    #endif
+    #endif
 
     if(vm.count("help") || argc == 1) {
         std::cout << desc << std::endl;
