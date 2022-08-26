@@ -106,6 +106,9 @@ int main(int argc, char *argv[]) {
             if(0 == (fpipe = (FILE*)popen(command.c_str(), "r"))) {
                 perror("Failed to execute ms command.");
                 std::cerr << "popen() failed." << std::endl;
+
+                if(!vm.count("ms_path"))
+                    std::cerr << std::endl << "Try --ms_path=\"your/path/to/your/ms/executable/folder/\"?" << std::endl;
                 return -1;
             }
 
