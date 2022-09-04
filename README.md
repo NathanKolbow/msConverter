@@ -54,7 +54,10 @@ Once these requirements are fulfilled, compile via the following commands:
 
 ```bash
 git clone https://github.com/NathanKolbow/msConverter.git
-cd msConverter
+mkdir msConverter/build
+cd msConverter/build
+cmake ..
+cmake --build .
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
