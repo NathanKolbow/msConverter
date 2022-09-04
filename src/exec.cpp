@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         ("file,input", po::value<std::string>(), "input file location")
         ("newick", po::value<std::string>(), "Newick formatted network or tree")
         ("output,o,out", po::value<std::string>(), "output file location")
-        ("quiet,no_warn", "do not output warning messages to standard error output")
+        ("verbose,warn,warnings", "show warning messages in standard error output")
         ("args_only", "only output the -ej and -es arguments for the ms command, NOT a fully formed ms command")
         ("safe,safe_mode", "converts all ms back to Newick to ensure accuracy before giving the ms to the user")
         ("n,ntrees", po::value<unsigned int>(), "number of trees generated in the ms command")
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     }
     
     // Check for warning disables
-    if(vm.count("quiet")) {
+    if(!vm.count("verbose")) {
         SimSuite::disableWarnings();
     }
 
