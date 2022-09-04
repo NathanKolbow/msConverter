@@ -72,8 +72,6 @@ bool isomorphic(Network &net1, Network &net2) {
     while(root2->getMajorAnc() != NULL)
         root2 = root2->getMajorAnc();
 
-    // std::cerr << "root1: " << root1->getName() << ", root2: " << root2->getName() << std::endl;
-
     // Check for isomorphism recursively
     return isomorphicRecur(root1, root2);
 }
@@ -84,20 +82,17 @@ bool isomorphicRecur(Node *p1, Node *p2) {
         return true;
     // One is null but the other is not
     if(p1 != p2 && (p1 == NULL || p2 == NULL)) {
-        // std::cerr << "Not isomorphic; " << (p1==NULL?p2->getName():p1->getName()) << " is not NULL, but its partner is.\n";
         return false;
     }
 
     // Check for equivalent hybrid statuses
     // if one is a hybrid but not the other, return false.
     if(p1->getMinorAnc() != p2->getMinorAnc() && (p1->getMinorAnc() == NULL || p2->getMinorAnc() == NULL)) {
-        // std::cerr << "Hybrid status of " << p1->getName() << " and " << p2->getName() << " differs.\n";
         return false;
     }
 
     // if branch info differs, return false.
     if(!nodeEquivBranches(p1, p2)) {
-        // std::cerr << "Branches of " << p1->getName() << " and " << p2->getName() << " differ ((" << p1->getMajorBranchLength() << "," << p1->getMinorBranchLength() << "),(" << p2->getMajorBranchLength() << "," << p2->getMinorBranchLength() << ")).\n";
         return false;
     }
 
@@ -107,20 +102,9 @@ bool isomorphicRecur(Node *p1, Node *p2) {
     Node *left2 = p2->getLft();
     Node *right2 = p2->getRht();
 
-    // if(left1 != NULL)
-    //     std::cerr << " left1: " << left1->getName();
-    // if(right1 != NULL)
-    //     std::cerr << " right1: " << right1->getName();
-    // if(left2 != NULL)
-    //     std::cerr << " left2: " << left2->getName();
-    // if(right2 != NULL)
-    //     std::cerr << " right2: " << right2->getName();
-    // std::cerr << std::endl;
-
     // Check for equivalence of presence of children
     // if they have differing amount of present children, return false.
     if((left1 == NULL) + (right1 == NULL) != (left2 == NULL) + (right2 == NULL)) {
-        // std::cerr << "Sum presence of children of " << p1->getName() << " and " << p2->getName() << " differs.\n";
         return false;
     }
 
@@ -151,25 +135,6 @@ bool nodeEquivBranches(Node *p1, Node *p2) {
            !(equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())))
             return false;
     }
-
-    // if(p1->getMinorAnc() == p2->getMinorAnc()) {
-    //     // Neither are hybrids
-    //     return 
-    //         // compare incoming branch lengths
-    //         p1->getMajorBranchLength() == p2->getMajorBranchLength() &&
-    //         // compare outgoing gammas
-    //         ((equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) || (equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())));
-    // } else {
-    //     // Both are hybrids
-    //     // if NOT(each of the branches of p1 matches one of p2's), return false.
-    //     if(!((equalDoubles(p1->getMajorBranchLength(), p2->getMajorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMinorBranchLength())) ||
-    //        (equalDoubles(p1->getMajorBranchLength(), p2->getMinorBranchLength()) && equalDoubles(p1->getMinorBranchLength(), p2->getMajorBranchLength()))))
-    //        return false;
-
-    //     // if neither pairing of outgoing gamma values matches, return false.
-    //     if(!(equalDoubles(p1->getGammaLft(), p2->getGammaLft()) && equalDoubles(p1->getGammaRht(), p2->getGammaRht())) && !(equalDoubles(p1->getGammaLft(), p2->getGammaRht()) && equalDoubles(p1->getGammaRht(), p2->getGammaLft())))
-    //         return false;
-    // }
     return true;
 }
 
@@ -228,14 +193,6 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
             }
         }
     }
-
-
-    // First, order the events backwards in time (from tips to root) so that they
-    // can be read in order.
-    // ---- don't actually do this. ms requires arguments in time-order.
-    // sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
-    //     return a->getTime() < b->getTime();
-    // });
 
     // Start by figuring out how many leaves we have. This is equal to the largest number
     // in the MSEvent's minus the total number of MSSplitEvent's
@@ -304,13 +261,14 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
                 else
                     std::cerr << std::endl << std::endl << "ERROR: When finding both taxa in a join event (" << e->getMajorTaxa() << "," << e->getMinorTaxa() << ")@" << e->getTime() << ", " << (fromTaxa == NULL ? e->getMajorTaxa() : e->getMinorTaxa()) << " could not be found." << std::endl;
 
-                std::cerr << "\tMS DUMP:" << std::endl;
+                std::cerr << "--------------- DEBUG INFO ---------------\n\tMS DUMP:" << std::endl;
                 for(MSEvent *e : events) {
                     if(e->getEventType() == join)
                         std::cerr << "\t" << ((MSJoinEvent*)e)->toString() << std::endl;
                     else
                         std::cerr << "\t" << ((MSSplitEvent*)e)->toString() << std::endl;
                 }
+                std::cerr << "------------------------------------------" << std::endl;
                 throw std::invalid_argument("bad ms input");
             }
 
@@ -871,7 +829,9 @@ void Network::buildFromNewick(std::string newickStr) {
 
             // move down one node
             if(p->getMajorAnc() == NULL) {
-                std::cerr << "ERROR: We cannot find an expected ancestor at i=" << i << "; p == root gives: " << (p == root) << std::endl;
+                std::cerr << "ERROR: Failed to read Newick string " << newickStr << std::endl;
+                std::cerr << "--------------- DEBUG INFO ---------------" << std::endl << "Cannot find an expected ancestor at i=" << i << "; p == root gives: " << (p == root) << std::endl;
+                std::cerr << "------------------------------------------" << std::endl;
                 exit(1);
             }
             p = p->getMajorAnc();
@@ -1028,24 +988,23 @@ void Network::setTimeRecur(Node *p) {
 
     if(!equalDoubles(timeFollowingMaj, timeFollowingMin)) {
         std::cerr << "ERROR: Branch lengths leading to node " << p->getName() << " disagree! Lengths are " << timeFollowingMaj << " and " << timeFollowingMin << "." << std::endl;
-        std::cerr << "\tParents are " << majAnc->getName() << " and " << ((minAnc == NULL)?"":minAnc->getName()) << " respectively." << std::endl;
+        std::cerr << "--------------- DEBUG INFO ---------------" << std::endl << "\tParents are " << majAnc->getName() << " and " << ((minAnc == NULL)?"":minAnc->getName()) << " respectively." << std::endl;
         std::cerr << "\t" << p->getMajorBranchLength() << ", " << p->getMinorBranchLength() << std::endl;
 
         // need to do some serious debugging here...
         std::cerr << "\tFOLLOWING MAJOR:" << p->getMajorBranchLength() << std::endl;
         Node *temp = majAnc;
         while(temp != root) {
-            // std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
             temp = temp->getMajorAnc();
         }
         if(minAnc != NULL) {
             std::cerr << "\tFOLLOWING MINOR:" << p->getMinorBranchLength() << std::endl;
             temp = minAnc;
             while(temp != root) {
-                // std::cerr << "\t" << temp->getName() << ":" << temp->getMajorBranchLength() << std::endl;
                 temp = temp->getMajorAnc();
            }
         }
+        std::cerr << "------------------------------------------" << std::endl;
         throw std::invalid_argument("branch length mismatch");
     }
     p->setTime(timeFollowingMaj);
@@ -1105,29 +1064,6 @@ void Network::patchNetwork() {
                 // We will keep the one with 1 child.
                 Node *dead = temp->getLft() == temp->getRht() ? temp : p;
                 p = (dead == temp) ? p : temp;
-
-                // We need to make sure that we set MajorAnc and MinorAnc properly!!!
-                // MajorAnc will be the ancestor from which the node receives >50% of its genes, and MinorAnc
-                // its complement. (In the case of a tie, it doesn't matter, so we don't do anything special...)
-                // if(dead->getGamma() > p->getGamma()) {
-                // Higher inheritance probability coming from the ancestor of dead
-                    // p->setMinorAnc(p->getMajorAnc());
-                    // p->setMinorBranchLength(p->getMajorBranchLength());
-                    // p->setMajorAnc(dead->getMajorAnc());
-                    // p->setMajorBranchLength(dead->getMajorBranchLength());
-
-                    // // Set the gammas for each of p's ancestors
-                    // if(p->getMajorAnc()->getLft() == p)
-                    //     p->getMajorAnc()->setGammaLft(dead->getGamma());
-                    // else
-                    //     p->getMajorAnc()->setGammaRht(dead->getGamma());
-                    
-                    // // Now the minor ancestor
-                    // if(p->getMinorAnc()->getLft() == p)
-                    //     p->getMinorAnc()->setGammaLft(p->getGamma());
-                    // else
-                    //     p->getMinorAnc()->setGammaRht(p->getGamma());
-                // } else {
 
                 // By convention, p's majorAncestor will always stay
                 // Higher inheritance probability coming from the ancestor of p
@@ -1224,17 +1160,6 @@ void Network::writeNetwork(Node* p, std::stringstream& ss, bool minorHybrid, boo
     // Different rules apply when dealing with hybrids, but we still want to traverse them normally once.
     // The variable `minorHybrid` allows us to traverse a hybrid node twice, differently both times.
     if(p != NULL) {
-        // std::stringstream pss;
-        // pss << p;
-        // std::cerr << "p: " << pss.str() << ":" << p->getName() << ":" << std::endl;
-        // std::cerr << "\n";
-
-        // std::stringstream mass;
-        // mass << p->getMinorAnc();
-
-        // std::cerr << p->getName() << ":" << minorHybrid << ":" << (p->getMajorAnc() != NULL ? p->getMajorAnc()->getName() : "") << ":" << ((p->getMinorAnc() != NULL) ? mass.str() /*p->getMinorAnc()->getName()*/ : "") << std::flush << std::endl << std::flush;
-
-        // std::cerr << "\n";
         if(p->getLft() == NULL || minorHybrid) {
             ss << p->getNewickFormattedName(minorHybrid, (minorHybrid ? (p == p->getMinorAnc()->getLft() ? p->getMinorAnc()->getGammaLft() : p->getMinorAnc()->getGammaRht()) : -1));
         } else {
@@ -1363,10 +1288,7 @@ std::vector<MSEvent*> Network::toms(double endTime) {
             return a->getTime() > b->getTime();
         });
 
-        //---- // process each nodes
-        //---- // TODO: in order to process EVERYTHING in time order, probably need to process just the next
-        //---- // entry in activeNodes one at a time, re-sorting every single time, instead of going in a for loop like this
-        //---- for(i = 0; i < activeNodes.size(); i++) {
+        // process each node
         Node *p = activeNodes[0];
         if(p == NULL) {
             std::cerr << "ERROR: Active node is blank." << std::endl << std::flush;
@@ -1442,7 +1364,6 @@ std::vector<MSEvent*> Network::toms(double endTime) {
             }
         }
         // c. if we don't have ancestors, we are root, so do nothing and allow ourselves to be removed
-        //---- }
 
         // Remove the item that we just processed
         activeNodes.erase(std::next(activeNodes.begin(), 0));
