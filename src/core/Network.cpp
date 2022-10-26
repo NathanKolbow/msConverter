@@ -37,31 +37,6 @@ bool WARNINGS_ENABLED = true;
 
 void disableNetworkWarnings(void) { WARNINGS_ENABLED = false; }
 
-void permuteRandomBranchLength(double change) {
-
-}
-
-// returns true if a permutation was successfully performed, false if
-// there were no gammas available to permute
-bool Network::permuteRandomGamma(double change) {
-    // find all the nodes that actually have gammas
-    std::vector<Node*> validNodes;
-    for(Node *p : nodes) {
-        if(p->getGammaLft() != 0 || p->getGammaRht() != 0)
-            validNodes.push_back(p);
-    }
-
-    // if none, return false
-    if(validNodes.size() == 0)
-        return false;
-
-    // select a random node
-
-    // permute its gamma (favors the left by default)
-
-    return false;
-}
-
 bool isomorphic(Network &net1, Network &net2) {
     // Find the root of each network
     Node *root1 = net1.getNodes()[0];
