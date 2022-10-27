@@ -106,8 +106,27 @@ namespace SimSuite {
             std::string msArgs = std::string(msCmd);
             argsOnly(msArgs);
 
-            if(!isomorphicNewick(line, msToNewick(msArgs)))
-                throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickFileToMSSafe]");
+            // see above for explanation of this `if` statement
+            if(!coalescent2N) {
+                if(!isomorphicNewick(line, msToNewick(msArgs))) {
+                    std::cerr << "---DEBUG INFO---\n";
+                    std::cerr << "Input: " << line << "\n\n";
+                    std::cerr << "Conversion (false): " << msToNewick(msArgs) << "\n\n";
+                    std::cerr << "---END DEBUG---\n";
+                    throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+                }
+            } else {
+                std::string msCmdCheck = newickToMS(line, ntrees, false);
+                std::string msArgsCheck = std::string(msCmdCheck);
+                argsOnly(msArgsCheck);
+                if(!isomorphicNewick(line, msToNewick(msArgsCheck))) {
+                    std::cerr << "---DEBUG INFO---\n";
+                    std::cerr << "Input: " << line << "\n\n";
+                    std::cerr << "Conversion (true): " << msToNewick(msArgs) << "\n\n";
+                    std::cerr << "---END DEBUG---\n";
+                    throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+                }
+            }
             msStrs.push_back(msCmd);
         }
         return msStrs;
