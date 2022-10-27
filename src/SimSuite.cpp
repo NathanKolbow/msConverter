@@ -63,8 +63,30 @@ namespace SimSuite {
         std::string msArgs = std::string(msCmd);
         argsOnly(msArgs);
 
-        if(!isomorphicNewick(newickStr, msToNewick(msArgs)))
-            throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+        // The check here depends on coalescent2N b/c coalescent2N either leaves the time untouched
+        // or cuts them in half. If the original times are compared to the halved times then every
+        // check fails, obviously...so we have to check based on coalescent2N
+        if(!coalescent2N) {
+            if(!isomorphicNewick(newickStr, msToNewick(msArgs))) {
+                std::cerr << "---DEBUG INFO---\n";
+                std::cerr << "Input: " << newickStr << "\n\n";
+                std::cerr << "Conversion (false): " << msToNewick(msArgs) << "\n\n";
+                std::cerr << "---END DEBUG---\n";
+                throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+            }
+        } else {
+            std::string msCmdCheck = newickToMS(newickStr, ntrees, false);
+            std::string msArgsCheck = std::string(msCmdCheck);
+            argsOnly(msArgsCheck);
+            if(!isomorphicNewick(newickStr, msToNewick(msArgsCheck))) {
+                std::cerr << "---DEBUG INFO---\n";
+                std::cerr << "Input: " << newickStr << "\n\n";
+                std::cerr << "Conversion (true): " << msToNewick(msArgs) << "\n\n";
+                std::cerr << "---END DEBUG---\n";
+                throw std::runtime_error("safety check failed: ms did not match Newick after conversion [newickToMSSafe]");
+            }
+        }
+        
         
         return msCmd;
     }

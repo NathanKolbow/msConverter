@@ -37,6 +37,31 @@ bool WARNINGS_ENABLED = true;
 
 void disableNetworkWarnings(void) { WARNINGS_ENABLED = false; }
 
+void permuteRandomBranchLength(double change) {
+
+}
+
+// returns true if a permutation was successfully performed, false if
+// there were no gammas available to permute
+bool Network::permuteRandomGamma(double change) {
+    // find all the nodes that actually have gammas
+    std::vector<Node*> validNodes;
+    for(Node *p : nodes) {
+        if(p->getGammaLft() != 0 || p->getGammaRht() != 0)
+            validNodes.push_back(p);
+    }
+
+    // if none, return false
+    if(validNodes.size() == 0)
+        return false;
+
+    // select a random node
+
+    // permute its gamma (favors the left by default)
+
+    return false;
+}
+
 bool isomorphic(Network &net1, Network &net2) {
     // Find the root of each network
     Node *root1 = net1.getNodes()[0];
@@ -584,8 +609,12 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
     }
 
     // When we get out of the for loop, spaceCount should be exactly 0. Throw an error if this is not the case
-    if(spaceCount != 0) {
-        std::cerr << "ERROR: Input ms command seqeuence was not in expected format." << std::endl;
+    if(spaceCount != 0 && str.substr(last_idx, spaceCount).compare(" ") != 0) {
+        std::cerr << "ERROR: Input ms command sequence was not in expected format." << std::endl;
+        std::cerr << "---DEBUG INFO---" << "\n";
+        std::cerr << str << "\n";
+        std::cerr << "\"" << str.substr(last_idx, spaceCount) << "\"" << "\n";
+        std::cerr << "---END DEBUG---" << "\n";
         throw std::invalid_argument("bad ms input");
     }
 
@@ -647,6 +676,9 @@ std::vector<MSEvent*> Network::parseMSEvents(std::string str) {
             events.push_back(e);
         } else {
             // Improper input
+            std::cerr << "---DEBUG INFO---\n";
+            std::cerr << "\"" << tk[2] << "\"" << "\n" << "\"" << tk << "\"" << "\n";
+            std::cerr << "---END DEBUG---\n";
             std::cerr << "ERROR: Input ms command invalid." << std::endl;
             throw std::invalid_argument("bad ms input");
         }
@@ -1057,8 +1089,6 @@ void Network::patchNetwork() {
                     p->getMinorAnc()->setGammaLft(dead->getGamma());
                 else
                     p->getMinorAnc()->setGammaRht(dead->getGamma());
-
-                // }
 
                 // Set p as the proper child of its new ancestor
                 if(dead->getMajorAnc()->getLft() == dead)

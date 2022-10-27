@@ -1,6 +1,19 @@
 # ms Converter
 
+## Contents
+
+1. [Overview](#overview)
+1. [Examples](#examples)
+1. [Existing restrictions](#present-restrictions)
+1. [Installation](#compiling-from-source)
+
 This code converts Newick trees/networks into a format accepted by the phylogenetic simulation software [`ms`](http://home.uchicago.edu/~rhudson1/source/mksamples.html).
+
+---
+
+## Overview
+
+`msConverter` is a C++ program made to convert trees and networks in Newick format to the format accepted by [`ms`](https://home.uchicago.edu/~rhudson1/source/mksamples.html).
 
 ---
 
