@@ -4,8 +4,7 @@
 #include <cmath>
 
 inline bool equalDoubles(double a, double b) {
-    // return a == b;
-    return std::abs(a - b) < 1e-6;
+    return std::abs(a - b) < 1e-4;
 }
 
 #endif

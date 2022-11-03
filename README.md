@@ -4,7 +4,7 @@
 
 1. [Overview](#overview)
 1. [Examples](#examples)
-1. [Existing restrictions](#present-restrictions)
+1. [Existing restrictions](#existing-restrictions)
 1. [Installation](#compiling-from-source)
 
 This code converts Newick trees/networks into a format accepted by the phylogenetic simulation software [`ms`](http://home.uchicago.edu/~rhudson1/source/mksamples.html).
@@ -47,9 +47,10 @@ The program can also directly run `ms` for you (unless you're using Windows, sor
 
 ---
 
-## Present restrictions:
+## Existing restrictions:
 
 * In the Newick format provided to `ms-converter`, gamma must be specified on _both_ nodes involved in a hybrid event, and _all_ unspecified branch lengths are assumed to be 0.
+* `ms` is designed to work with extant taxa, so only ultrametric trees and networks make sense within it. So, all input trees/networks are made ultrametric before translated to the `ms` format.
 
 ---
 

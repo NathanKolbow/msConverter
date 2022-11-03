@@ -183,8 +183,17 @@ void Network::buildFromMS(std::vector<MSEvent*> events) {
 
             tryAddNodes(e, taxa_at_time);
         } else if(e->getTime() < curr_time) {
-            std::cerr << "ERROR: ms events are not in time order." << std::endl;
-            throw std::invalid_argument("ms input not in time order");
+            // DEPRECATED: `ms` does actually allow arguments out of time order, so this isn't an error.
+        //     std::cerr << "---DEBUG INFO---\n";
+        //     for(MSEvent *e : events) {
+        //         if(e->getEventType() == join)
+        //             std::cerr << "\t" << ((MSJoinEvent*)e)->toString() << std::endl;
+        //         else
+        //             std::cerr << "\t" << ((MSSplitEvent*)e)->toString() << std::endl;
+        //     }
+        //     std::cerr << "---END DEBUG---\n";
+        //     std::cerr << "ERROR: ms events are not in time order." << std::endl;
+        //     throw std::invalid_argument("ms input not in time order");
         } else {
             if(!tryAddNodes(e, taxa_at_time)) {
                 // one of the taxa in e was already involved at this time
@@ -867,6 +876,9 @@ void Network::buildFromNewick(std::string newickStr) {
             namingInternalNode = false;
             // finished!
             if(p != root) {
+                std::cerr << "---DEBUG INFO---\n";
+                std::cerr << "\"" << newickStr << "\", " << "\"" << token << "\"\n";
+                std::cerr << "---END DEBUG---\n\n";
                 std::cerr << "ERROR: We expect to finish at the root node, finished at " << p->getName() << ", " << p << std::endl;
                 exit(1);
             }
@@ -996,6 +1008,7 @@ void Network::setTimeRecur(Node *p) {
     if(!equalDoubles(timeFollowingMaj, timeFollowingMin)) {
         std::cerr << "ERROR: Branch lengths leading to node " << p->getName() << " disagree! Lengths are " << timeFollowingMaj << " and " << timeFollowingMin << "." << std::endl;
         std::cerr << "--------------- DEBUG INFO ---------------" << std::endl << "\tParents are " << majAnc->getName() << " and " << ((minAnc == NULL)?"":minAnc->getName()) << " respectively." << std::endl;
+        std::cerr << std::setprecision(25) << "absolute difference: " << std::abs(timeFollowingMaj - timeFollowingMin) << "\n";
         std::cerr << "\t" << p->getMajorBranchLength() << ", " << p->getMinorBranchLength() << std::endl;
 
         // need to do some serious debugging here...
@@ -1383,12 +1396,19 @@ std::vector<MSEvent*> Network::toms(double endTime) {
     for(MSEvent *e : events)
         e->setTime(endTime - e->getTime());
 
+    // NEW SORTING FXN
+    // Sorting is hard...so unfortunately we have to do it all ourselves, very, very carefully
+    // ...aka brute force :))
+
+
+    // DEPRECATED SORTING FXN
+    //
     // having lots of issues with the sort fxn, so we're gonna do this in two steps...
     std::sort(events.begin(), events.end(), [](MSEvent *a, MSEvent *b) {
-        if(a->getTime() != b->getTime()) return a->getTime() < b->getTime();
+        if(!equalDoubles(a->getTime(), b->getTime())) return a->getTime() < b->getTime();
         else if(a->getEventType() != b->getEventType()) {
-            if(a->getEventType() == join) return true;
-            return false;
+            if(a->getEventType() == join) return false;
+            return true;
         } else if(a->getEventType() == join) {
             if(((MSJoinEvent*)a)->getMajorTaxa() == ((MSJoinEvent*)b)->getMajorTaxa())
                 return ((MSJoinEvent*)a)->getMinorTaxa() < ((MSJoinEvent*)b)->getMinorTaxa();
