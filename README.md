@@ -64,6 +64,9 @@ Requirements:
     * Ubuntu: `apt-get install libboost-all-dev`
 * C++ compiler and standard libraries (make sure these are up-to-date if compilation fails)
 
+Optional:
+* [ms](https://uchicago.app.box.com/s/l3e5uf13tikfjm7e1il1eujitlsjdx13) (not msHOT)
+
 Once these requirements are fulfilled, compile via the following commands:
 
 ```bash
